@@ -1,0 +1,383 @@
+{
+  "schema": "relay-v3.2-delp-execution-graph",
+  "programme": {
+    "id": "LAB-V32-CSV-AUDITOR",
+    "root": "reallaksh19/relay-v32-e2e-lab#1",
+    "repository": "reallaksh19/relay-v32-e2e-lab",
+    "total_weight": 100,
+    "base_ref": "main",
+    "decomposition_policy": {
+      "mode": "ENFORCED",
+      "claim_first": {
+        "mode": "ENFORCED",
+        "require_independence_basis": true
+      }
+    },
+    "acceptance_claims": [
+      {
+        "id": "CL-INPUT",
+        "claim": "Every input CSV has nonempty unique IDs; invalid, absent or duplicate IDs fail closed",
+        "kind": "SEMANTIC",
+        "weight": 30,
+        "shared": false
+      },
+      {
+        "id": "CL-DIFF",
+        "claim": "Added, removed and changed records are computed from exact key identity, independently of CSV row order",
+        "kind": "SEMANTIC",
+        "weight": 40,
+        "shared": false
+      },
+      {
+        "id": "CL-CLI",
+        "claim": "CLI emits stable JSON with correct exit statuses and no success payload on malformed input",
+        "kind": "SEMANTIC",
+        "weight": 30,
+        "shared": false
+      }
+    ],
+    "decomposition_proposal": {
+      "version": "V2",
+      "responsibilities": [
+        {
+          "id": "R01",
+          "work_class": "PRODUCT",
+          "owns_claims": [
+            "CL-INPUT"
+          ],
+          "claim_allocations": [
+            {
+              "claim_id": "CL-INPUT",
+              "weight": 30
+            }
+          ],
+          "outcome": "Reject invalid input sources and preserve each valid keyed record exactly.",
+          "independence_basis": "Input validity is independently decidable from parsing edge cases without finishing comparison or CLI.",
+          "semantic_units": [
+            {
+              "id": "U01",
+              "kind": "SEMANTIC",
+              "weight": 30,
+              "outcome": "Reject empty ID and missing ID header",
+              "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+            },
+            {
+              "id": "U02",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Reject duplicate IDs with a clear error",
+              "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+            },
+            {
+              "id": "U03",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Retain every valid keyed row with unmodified column values",
+              "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+            }
+          ],
+          "size_budget": {
+            "target_loc": 100,
+            "hard_loc": 400,
+            "target_minutes": 10,
+            "hard_minutes": 20
+          },
+          "write_surface": [
+            "src/csv_auditor/parser.py"
+          ],
+          "acceptance_methods": [
+            "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "R02",
+          "work_class": "PRODUCT",
+          "owns_claims": [
+            "CL-DIFF"
+          ],
+          "claim_allocations": [
+            {
+              "claim_id": "CL-DIFF",
+              "weight": 40
+            }
+          ],
+          "outcome": "Classify newly present, missing and changed keyed records without row-order errors.",
+          "independence_basis": "Change classification is independently verifiable on normalized dictionaries after R01 delivers the input contract.",
+          "semantic_units": [
+            {
+              "id": "U01",
+              "kind": "SEMANTIC",
+              "weight": 30,
+              "outcome": "Identify newly present keys",
+              "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+            },
+            {
+              "id": "U02",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Identify keys no longer present",
+              "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+            },
+            {
+              "id": "U03",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Identify changed keyed values with deterministic ordering",
+              "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+            }
+          ],
+          "size_budget": {
+            "target_loc": 100,
+            "hard_loc": 400,
+            "target_minutes": 10,
+            "hard_minutes": 20
+          },
+          "write_surface": [
+            "src/csv_auditor/compare.py"
+          ],
+          "acceptance_methods": [
+            "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+          ],
+          "depends_on": [
+            "R01"
+          ]
+        },
+        {
+          "id": "R03",
+          "work_class": "PRODUCT",
+          "owns_claims": [
+            "CL-CLI"
+          ],
+          "claim_allocations": [
+            {
+              "claim_id": "CL-CLI",
+              "weight": 30
+            }
+          ],
+          "outcome": "Produce deterministic JSON and an unambiguous nonzero error status on invalid input.",
+          "independence_basis": "The CLI exit contract and JSON output can be accepted separately when R01 and R02 are stable.",
+          "semantic_units": [
+            {
+              "id": "U01",
+              "kind": "SEMANTIC",
+              "weight": 30,
+              "outcome": "Accept exactly two input paths",
+              "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+            },
+            {
+              "id": "U02",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Emit stable added removed modified JSON",
+              "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+            },
+            {
+              "id": "U03",
+              "kind": "SEMANTIC",
+              "weight": 35,
+              "outcome": "Return nonzero without successful payload for invalid inputs",
+              "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+            }
+          ],
+          "size_budget": {
+            "target_loc": 100,
+            "hard_loc": 400,
+            "target_minutes": 10,
+            "hard_minutes": 20
+          },
+          "write_surface": [
+            "src/csv_auditor/cli.py"
+          ],
+          "acceptance_methods": [
+            "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+          ],
+          "depends_on": [
+            "R02"
+          ]
+        }
+      ],
+      "released_proposal_digest": "sha256:b153846fbb2f189ac255e3677072d35a3f591e8402199bb14eddf8b653c58ad8",
+      "bindings": [
+        {
+          "responsibility_id": "R01",
+          "ref": "reallaksh19/relay-v32-e2e-lab#4"
+        },
+        {
+          "responsibility_id": "R02",
+          "ref": "reallaksh19/relay-v32-e2e-lab#5"
+        },
+        {
+          "responsibility_id": "R03",
+          "ref": "reallaksh19/relay-v32-e2e-lab#6"
+        }
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#1",
+      "kind": "ROOT"
+    },
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#2",
+      "kind": "INTERMEDIATE",
+      "parent": "reallaksh19/relay-v32-e2e-lab#1",
+      "weight": 7
+    },
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#3",
+      "kind": "INTERMEDIATE",
+      "parent": "reallaksh19/relay-v32-e2e-lab#1",
+      "weight": 3
+    },
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#4",
+      "kind": "LEAF",
+      "parent": "reallaksh19/relay-v32-e2e-lab#2",
+      "weight": 3,
+      "responsibility_id": "R01",
+      "candidate_ref": "lab/r01",
+      "critical": true,
+      "work_class": "PRODUCT",
+      "owns_claims": [
+        "CL-INPUT"
+      ],
+      "outcome": "Reject invalid input sources and preserve each valid keyed record exactly.",
+      "independence_basis": "Input validity is independently decidable from parsing edge cases without finishing comparison or CLI.",
+      "write_surface": [
+        "src/csv_auditor/parser.py"
+      ],
+      "acceptance_methods": [
+        "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+      ],
+      "size_budget": {
+        "target_loc": 100,
+        "hard_loc": 400,
+        "target_minutes": 10,
+        "hard_minutes": 20
+      },
+      "depends_on": [],
+      "units": [
+        {
+          "id": "U01",
+          "weight": 30,
+          "outcome": "Reject empty ID and missing ID header",
+          "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+        },
+        {
+          "id": "U02",
+          "weight": 35,
+          "outcome": "Reject duplicate IDs with a clear error",
+          "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+        },
+        {
+          "id": "U03",
+          "weight": 35,
+          "outcome": "Retain every valid keyed row with unmodified column values",
+          "verify": "python -m unittest discover -s acceptance -p test_r01_input.py -v"
+        }
+      ]
+    },
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#5",
+      "kind": "LEAF",
+      "parent": "reallaksh19/relay-v32-e2e-lab#2",
+      "weight": 4,
+      "responsibility_id": "R02",
+      "candidate_ref": "lab/r02",
+      "critical": true,
+      "work_class": "PRODUCT",
+      "owns_claims": [
+        "CL-DIFF"
+      ],
+      "outcome": "Classify newly present, missing and changed keyed records without row-order errors.",
+      "independence_basis": "Change classification is independently verifiable on normalized dictionaries after R01 delivers the input contract.",
+      "write_surface": [
+        "src/csv_auditor/compare.py"
+      ],
+      "acceptance_methods": [
+        "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+      ],
+      "size_budget": {
+        "target_loc": 100,
+        "hard_loc": 400,
+        "target_minutes": 10,
+        "hard_minutes": 20
+      },
+      "depends_on": [
+        "reallaksh19/relay-v32-e2e-lab#4"
+      ],
+      "units": [
+        {
+          "id": "U01",
+          "weight": 30,
+          "outcome": "Identify newly present keys",
+          "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+        },
+        {
+          "id": "U02",
+          "weight": 35,
+          "outcome": "Identify keys no longer present",
+          "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+        },
+        {
+          "id": "U03",
+          "weight": 35,
+          "outcome": "Identify changed keyed values with deterministic ordering",
+          "verify": "python -m unittest discover -s acceptance -p test_r02_compare.py -v"
+        }
+      ]
+    },
+    {
+      "ref": "reallaksh19/relay-v32-e2e-lab#6",
+      "kind": "LEAF",
+      "parent": "reallaksh19/relay-v32-e2e-lab#3",
+      "weight": 3,
+      "responsibility_id": "R03",
+      "candidate_ref": "lab/r03",
+      "critical": true,
+      "work_class": "PRODUCT",
+      "owns_claims": [
+        "CL-CLI"
+      ],
+      "outcome": "Produce deterministic JSON and an unambiguous nonzero error status on invalid input.",
+      "independence_basis": "The CLI exit contract and JSON output can be accepted separately when R01 and R02 are stable.",
+      "write_surface": [
+        "src/csv_auditor/cli.py"
+      ],
+      "acceptance_methods": [
+        "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+      ],
+      "size_budget": {
+        "target_loc": 100,
+        "hard_loc": 400,
+        "target_minutes": 10,
+        "hard_minutes": 20
+      },
+      "depends_on": [
+        "reallaksh19/relay-v32-e2e-lab#5"
+      ],
+      "units": [
+        {
+          "id": "U01",
+          "weight": 30,
+          "outcome": "Accept exactly two input paths",
+          "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+        },
+        {
+          "id": "U02",
+          "weight": 35,
+          "outcome": "Emit stable added removed modified JSON",
+          "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+        },
+        {
+          "id": "U03",
+          "weight": 35,
+          "outcome": "Return nonzero without successful payload for invalid inputs",
+          "verify": "python -m unittest discover -s acceptance -p test_r03_cli.py -v"
+        }
+      ]
+    }
+  ]
+}
