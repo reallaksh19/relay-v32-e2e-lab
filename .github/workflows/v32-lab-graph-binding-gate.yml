@@ -1,0 +1,101 @@
+name: V3.2 lab native governance PR binding gate
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Governance-only candidate PR number to revalidate"
+        type: number
+        required: true
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: v32-lab-native-binding-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: false
+jobs:
+  trusted-graph-binding:
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.pull_request.head.ref, 'governance/')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout trusted default branch (never execute PR code)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify trusted governance gate self-tests
+        run: python -m unittest discover -s tests -p test_graph_binding_gate.py -v
+      - name: Read exact PR/graph data through GitHub provider
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || { echo 'INVALID_PR_NUMBER'; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/governance-pr.json"
+          python - "$RUNNER_TEMP/governance-pr.json" <<'PY'
+          import json,sys
+          pr=json.load(open(sys.argv[1]))
+          assert pr['base']['repo']['full_name']=='reallaksh19/relay-v32-e2e-lab'
+          assert pr['base']['ref']=='main'
+          assert pr['head']['repo']['full_name']=='reallaksh19/relay-v32-e2e-lab'
+          assert pr['head']['ref'].startswith('governance/')
+          assert pr['state']=='open'
+          print('READ_ONLY_GOVERNANCE_PR_PROVIDER_IDENTITY_VERIFIED')
+          PY
+          BASE_SHA="$(jq -r '.base.sha' "$RUNNER_TEMP/governance-pr.json")"
+          HEAD_SHA="$(jq -r '.head.sha' "$RUNNER_TEMP/governance-pr.json")"
+          [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ && "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          git -c "http.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+            fetch --no-tags origin "refs/pull/$PR_NUMBER/head:refs/remotes/origin/v32-governance-candidate"
+          test "$(git rev-parse refs/remotes/origin/v32-governance-candidate)" = "$HEAD_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          MERGE_BASE="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          git diff --name-only --diff-filter=ACDMRT "$MERGE_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/changed-paths.txt"
+          git show "$BASE_SHA:governance/released-graph.json" > "$RUNNER_TEMP/graph-base.json"
+          git show "$HEAD_SHA:governance/released-graph.json" > "$RUNNER_TEMP/graph-candidate.json"
+          python scripts/validate_graph_binding.py \
+            --base "$RUNNER_TEMP/graph-base.json" \
+            --candidate "$RUNNER_TEMP/graph-candidate.json" \
+            --changed-paths "$RUNNER_TEMP/changed-paths.txt" \
+            > "$RUNNER_TEMP/pre-provider-binding.json"
+          BOUND_PR="$(jq -r '.primary_pr | split("#") | last' "$RUNNER_TEMP/pre-provider-binding.json")"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$BOUND_PR" > "$RUNNER_TEMP/bound-pr.json"
+          python scripts/validate_graph_binding.py \
+            --base "$RUNNER_TEMP/graph-base.json" \
+            --candidate "$RUNNER_TEMP/graph-candidate.json" \
+            --changed-paths "$RUNNER_TEMP/changed-paths.txt" \
+            --provider-pr "$RUNNER_TEMP/bound-pr.json"
+      - name: Checkout immutable Common V3.2 engine (trusted code only)
+        uses: actions/checkout@v4
+        with:
+          repository: reallaksh19/Common
+          ref: 13989969f6b7e432c4f7c1ddfe975449dba53593
+          token: ${{ secrets.COMMON_READ_TOKEN }}
+          path: .protocol/common
+          persist-credentials: false
+      - name: Native validate/decompose/graph-diff, then reread provider
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .protocol/common rev-parse HEAD)" = '13989969f6b7e432c4f7c1ddfe975449dba53593'
+          ENGINE='.protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py'
+          python "$ENGINE" validate-graph --graph "$RUNNER_TEMP/graph-candidate.json"
+          python "$ENGINE" decompose-check --graph "$RUNNER_TEMP/graph-candidate.json"
+          python "$ENGINE" graph-diff --old "$RUNNER_TEMP/graph-base.json" --new "$RUNNER_TEMP/graph-candidate.json"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/governance-pr-after.json"
+          test "$(jq -r '.head.sha' "$RUNNER_TEMP/governance-pr.json")" = "$(jq -r '.head.sha' "$RUNNER_TEMP/governance-pr-after.json")"
+          test "$(jq -r '.base.sha' "$RUNNER_TEMP/governance-pr.json")" = "$(jq -r '.base.sha' "$RUNNER_TEMP/governance-pr-after.json")"
+          BOUND_PR="$(jq -r '.primary_pr | split("#") | last' "$RUNNER_TEMP/pre-provider-binding.json")"
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$BOUND_PR" > "$RUNNER_TEMP/bound-pr-after.json"
+          test "$(jq -r '.head.sha' "$RUNNER_TEMP/bound-pr.json")" = "$(jq -r '.head.sha' "$RUNNER_TEMP/bound-pr-after.json")"
+          echo 'NATIVE_V32_GRAPH_BINDING_VERIFIED_READ_ONLY; no P/E/D and no release approval' >> "$GITHUB_STEP_SUMMARY"
