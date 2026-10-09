@@ -19,10 +19,29 @@ REPO = "reallaksh19/relay-v32-e2e-lab"
 SCHEMA = "lab-v32-native-provider-snapshot-v1"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 MAX_COMMENTS_PER_LEAF = 1000
+# Approved lab graph version; changing plan/claim/trust input requires an explicit
+# separately reviewed release pin, never a self-consistent caller snapshot.
+RELEASED_GRAPH_BLOB = "fde7e1fbd0c71efb64a678206f0bc9f32e36f6c8"
 
 
 def git_blob(data: bytes) -> str:
     return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+
+
+def require_released_graph(graph: dict, raw_graph: bytes) -> None:
+    """Guard released graph custody before any provider read or offline replay.
+
+    Snapshot-internal checksum agreement is insufficient: an attacker could
+    rehash an altered graph and an altered snapshot together.
+    """
+    if git_blob(raw_graph) != RELEASED_GRAPH_BLOB:
+        raise ValueError("RELEASED_GRAPH_SOURCE_BLOB_NOT_PINNED")
+    try:
+        from_bytes = json.loads(raw_graph)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise ValueError("RELEASED_GRAPH_SOURCE_NOT_JSON") from exc
+    if from_bytes != graph:
+        raise ValueError("GRAPH_MAPPING_DIFFERS_FROM_PINNED_BYTES")
 
 
 def sha256_json(value: Any) -> str:
@@ -61,6 +80,7 @@ def _layout(graph: dict) -> tuple[list[int], dict[int, dict], list[int]]:
 
 
 def validate_snapshot(graph: dict, graph_bytes: bytes, snap: dict) -> None:
+    require_released_graph(graph, graph_bytes)
     issues, leaves, prs = _layout(graph)
     if snap.get("schema") != SCHEMA or snap.get("repository") != REPO:
         raise ValueError("SNAPSHOT_SCHEMA_OR_REPO_MISMATCH")
@@ -164,6 +184,7 @@ def _pull(p: dict) -> dict:
 
 
 def capture(graph: dict, raw_graph: bytes, fetch: Callable[[str], Any] = _get) -> dict:
+    require_released_graph(graph, raw_graph)  # Zero GitHub GETs on an unapproved graph.
     issues, leaves, prs = _layout(graph)
     main = fetch(f"repos/{REPO}/commits/main")["sha"]
     titles = {str(n): {"title": fetch(f"repos/{REPO}/issues/{n}")["title"]} for n in issues}
