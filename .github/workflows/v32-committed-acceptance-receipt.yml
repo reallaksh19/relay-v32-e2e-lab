@@ -1,0 +1,90 @@
+name: V3.2 lab committed acceptance — source-pinned execution receipt
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/csv_auditor/**'
+      - 'acceptance/test_r0*.py'
+      - 'scripts/exact_source_test_receipt.py'
+      - 'tests/test_exact_source_test_receipt.py'
+      - 'evidence/COMMITTED_ACCEPTANCE_BLOBS_V1.json'
+      - '.github/workflows/v32-committed-acceptance-receipt.yml'
+permissions:
+  contents: read
+jobs:
+  committed-source-receipt:
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove exact event source and pinned historical baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json
+          d=json.load(open('evidence/COMMITTED_ACCEPTANCE_BLOBS_V1.json',encoding='utf-8'))
+          assert d['base_main_sha']=='73ffc780f4dfbd9de9010bbe71524f6f6de72765'
+          assert len(d['blobs'])==7
+          print('SEVEN_HISTORICAL_GITHUB_BLOB_IDENTITIES_PINNED')
+          PY
+          git merge-base --is-ancestor '73ffc780f4dfbd9de9010bbe71524f6f6de72765' "$GITHUB_SHA"
+      - name: Exercise source and oracle tampering negative controls
+        run: python -m unittest discover -s tests -p test_exact_source_test_receipt.py -v
+      - name: Run nine real committed acceptance tests and produce receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/exact_source_test_receipt.py \
+            --root . \
+            --manifest evidence/COMMITTED_ACCEPTANCE_BLOBS_V1.json \
+            --output "$RUNNER_TEMP/LOCAL_EXECUTION_RECEIPT_V1.json"
+          python - "$RUNNER_TEMP/LOCAL_EXECUTION_RECEIPT_V1.json" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d['committed_goldens_run']==9
+          assert [x['actual_tests_run'] for x in d['tests']]==[4,3,2]
+          assert all(x['returncode']==0 for x in d['tests'])
+          assert d['checkpoint_facts_admitted'] is False
+          assert d['progress_credit']=='NONE'
+          assert d['owner_authorization']=='WAIVED_NOT_PASSED'
+          print('EXACT_FILE_BLOBS_AND_NINE_NAMED_TESTS_EXECUTED; ZERO_PROGRESS_CREDIT')
+          PY
+      - name: Write Actions run linkage — not human or independent approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "$RUNNER_TEMP/actions-execution-link.json" <<'PY'
+          import json,os,sys
+          body={'schema':'lab-v32-actions-run-link-v1',
+                'repository':os.environ['GITHUB_REPOSITORY'],
+                'event_sha':os.environ['GITHUB_SHA'],
+                'run_id':os.environ['GITHUB_RUN_ID'],
+                'run_attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                'run_url':'https://github.com/'+os.environ['GITHUB_REPOSITORY']+'/actions/runs/'+os.environ['GITHUB_RUN_ID'],
+                'checkpoint_facts_admitted':False,
+                'owner_authorization':'WAIVED_NOT_PASSED',
+                'independent_review':'NOT_PERFORMED'}
+          with open(sys.argv[1],'w',encoding='utf-8') as f: json.dump(body,f,sort_keys=True,indent=2)
+          PY
+          sha256sum "$RUNNER_TEMP/LOCAL_EXECUTION_RECEIPT_V1.json" "$RUNNER_TEMP/actions-execution-link.json"
+          echo 'Source-bound receipt executed; this is NOT a CHECKPOINT_FACTS or Owner authorization event.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive actual execution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v32-actual-golden-receipt-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            ${{ runner.temp }}/LOCAL_EXECUTION_RECEIPT_V1.json
+            ${{ runner.temp }}/actions-execution-link.json
