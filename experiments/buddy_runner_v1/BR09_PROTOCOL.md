@@ -50,6 +50,20 @@ UNKNOWN, never coerced to zero or guessed. Comparisons use total combined
 cost, not Runner-only cost; never claim productivity gain just because
 the original agent stopped consuming tokens.
 
+Every treatment records an explicitly SOURCE-LABELLED trigger_percent:
+EARLY_50 accepts 40–60, TARGET_70 accepts 60–80, and LATE_85 accepts
+75–95 (these are tolerances for experimental cohort classification,
+not genuine provider context-window measurements). CONTROL must carry
+trigger_percent=null with trigger_source_kind=NONE. The no-Runner control
+must mark Runner/isolation/witness/interruption/Stage2 phases
+NOT_APPLICABLE and must carry no nonzero Runner token or cost value.
+This prevents the control from fabricating a Runner PASS.
+
+A matching SHA-256 value from four caller-supplied rows is only a
+MATCHED FROZEN SOURCE CLAIM, not source authentication. Metric fields
+being complete means they were supplied, not independently observed.
+An external verifier must inspect the actual provider records.
+
 The experimental CLI:
 
     python experiments/buddy_runner_v1/trial_evaluator.py \
@@ -85,6 +99,6 @@ matched scenario inputs, no fabricated cost, failure for invalid or
 unsequenced proof slots, and no promotion from even self-claimed complete
 real-agent evidence.
 
-Local verification: 14/14 focused and 96/96 combined Buddy v1 tests
+Local verification: 16/16 focused and 98/98 combined Buddy v1 tests
 passed on the available development harness. This does NOT establish
 hosted exact-head CI, independent signed facts or model continuity.
