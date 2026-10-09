@@ -1,0 +1,114 @@
+name: V3.2 lab native issue scoreboard LIVE
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v32-native-issue-scoreboard.yml'
+      - 'governance/released-graph.json'
+  issue_comment:
+    types: [created, edited]
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed, ready_for_review, converted_to_draft]
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+concurrency:
+  group: lab-v32-native-issue-scoreboard
+  cancel-in-progress: false
+jobs:
+  source-locked-native-sync:
+    name: Provider read → Native V3.2 sync → Provider readback
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trusted lab default-branch checkout only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Immutable V3.2 Common checkout
+        uses: actions/checkout@v4
+        with:
+          repository: reallaksh19/Common
+          ref: 13989969f6b7e432c4f7c1ddfe975449dba53593
+          token: ${{ secrets.COMMON_READ_TOKEN }}
+          persist-credentials: false
+          path: .protocol/common
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native schema dependency
+        run: python -m pip install --disable-pip-version-check PyYAML
+      - name: Source and experiment boundaries — never confuse waiver with approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .protocol/common rev-parse HEAD)" = '13989969f6b7e432c4f7c1ddfe975449dba53593'
+          python - <<'PY'
+          import json
+          g=json.load(open("governance/released-graph.json", encoding="utf-8"))
+          m=json.load(open("governance/issue-map.json", encoding="utf-8"))
+          assert g["programme"]["repository"] == "reallaksh19/relay-v32-e2e-lab"
+          assert g["programme"]["root"] == "reallaksh19/relay-v32-e2e-lab#1"
+          assert m["release_authority_verified"] is False and m["t05"] == "WAIVED_NOT_PASSED"
+          assert m["approval_comment_valid"] is False
+          assert len(g["nodes"]) == 6
+          assert {b["responsibility_id"] for b in g["programme"]["decomposition_proposal"]["bindings"]} == {"R01", "R02", "R03"}
+          print("PRIVATE_LAB_ONLY; T05 WAIVED NOT APPROVED; no production authority")
+          PY
+      - name: Validate native graph and decomposition
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine='.protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py'
+          python "$engine" validate-graph --graph governance/released-graph.json
+          python "$engine" decompose-check --graph governance/released-graph.json
+      - name: BEFORE — native read-only GitHub observations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py sync-github \
+            --graph governance/released-graph.json \
+            --repository reallaksh19/relay-v32-e2e-lab --dry-run > "$RUNNER_TEMP/before.json"
+          python -m json.tool "$RUNNER_TEMP/before.json" | head -c 6500 || true
+      - name: WRITE — the native Common V3.2 projector, not a hand-authored title
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py sync-github \
+            --graph governance/released-graph.json \
+            --repository reallaksh19/relay-v32-e2e-lab | tee "$RUNNER_TEMP/native-sync.json"
+      - name: AFTER — native readback; no remaining title drift; idempotence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          engine='.protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py'
+          python "$engine" sync-github --graph governance/released-graph.json \
+            --repository reallaksh19/relay-v32-e2e-lab --dry-run > "$RUNNER_TEMP/after.json"
+          python - "$RUNNER_TEMP/after.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert r.get("would_write_titles") == 0, r.get("drift")
+          print("NATIVE_V32_ISSUE_TITLES_RECONCILED",r["input_digest"])
+          PY
+          python "$engine" sync-github --graph governance/released-graph.json \
+            --repository reallaksh19/relay-v32-e2e-lab > "$RUNNER_TEMP/second.json"
+          python - "$RUNNER_TEMP/second.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert len(r)==6, r
+          assert all(x.get("status") == "UNCHANGED" for x in r.values()),r
+          print("NATIVE_V32_IDEMPOTENT_ALL_SIX",len(r))
+          PY
+      - name: Explicit acceptance limitation
+        run: |
+          echo "E2E-04 ISSUE title/status exercise only. Product PR, TASK_EVIDENCE progress, PR title writer and native handover remain NOT QUALIFIED." >> "$GITHUB_STEP_SUMMARY"
+          echo "T05 human approval was waived for this disposable lab. Not a valid native release-authority pass." >> "$GITHUB_STEP_SUMMARY"
