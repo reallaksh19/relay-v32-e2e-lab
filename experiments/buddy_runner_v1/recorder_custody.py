@@ -181,12 +181,18 @@ def append(journal, secret, kind, snapshot, *, receipt=None, gate=None,
         return event
 
 
-def verify_journal(journal, secret, *, anchor=None):
+def read_verified_journal(journal, secret, *, anchor=None):
+    """Return the verified state and the very same locked journal snapshot."""
     journal = Path(journal)
     _require(journal.is_file() and not journal.is_symlink(), "RECORDER_JOURNAL_MISSING")
     with journal.open("rb") as stream:
         fcntl.flock(stream.fileno(), fcntl.LOCK_SH)
-        return verify_events(_read(stream), secret, anchor=anchor)
+        events = _read(stream)
+        return verify_events(events, secret, anchor=anchor), events
+
+
+def verify_journal(journal, secret, *, anchor=None):
+    return read_verified_journal(journal, secret, anchor=anchor)[0]
 
 
 def validate_disclosure(journal, secret, snapshot, receipt, gate,
