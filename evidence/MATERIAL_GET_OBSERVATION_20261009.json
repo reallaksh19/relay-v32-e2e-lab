@@ -1,0 +1,232 @@
+{
+  "schema": "lab-v32-provider-observation-v1",
+  "repository": "reallaksh19/relay-v32-e2e-lab",
+  "source_repository_main_sha": "cda204a7ef2a32008c14d8a54d6369327557d89a",
+  "source_graph_blob_sha": "fde7e1fbd0c71efb64a678206f0bc9f32e36f6c8",
+  "kind": "read-only GitHub connector observation at 2026-10-09; NOT a durable signed native Actions artifact",
+  "provider_access_history": "CONNECTOR_GET_OBSERVED; actor attestation and original T05 approval remain UNKNOWN",
+  "completeness": "all matching push/pull_request runs from each queried Actions run page (counts <=100), job pages <=100",
+  "facts_admitted": false,
+  "progress_credit": "NONE",
+  "leaves": [
+    {
+      "responsibility_id": "R01",
+      "pr": {
+        "number": 8,
+        "merged": true,
+        "head": {
+          "sha": "8ced7c13d5e9f9ba6870899ae8c62ec5501011b4",
+          "ref": "lab/r01",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        },
+        "base": {
+          "sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+          "ref": "main",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        }
+      },
+      "runs": [
+        {
+          "id": 37932603072,
+          "event": "pull_request",
+          "head_sha": "8ced7c13d5e9f9ba6870899ae8c62ec5501011b4",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113826747924,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113826748128,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": 37932339483,
+          "event": "push",
+          "head_sha": "8ced7c13d5e9f9ba6870899ae8c62ec5501011b4",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113825858060,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113825858204,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "responsibility_id": "R02",
+      "pr": {
+        "number": 13,
+        "merged": true,
+        "head": {
+          "sha": "14de12587d5b5b88cee65b0fde447833be92e7c2",
+          "ref": "lab/r02",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        },
+        "base": {
+          "sha": "ca729931f8af9e156cd86b4ee93f8ec868b048aa",
+          "ref": "main",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        }
+      },
+      "runs": [
+        {
+          "id": 37937510167,
+          "event": "pull_request",
+          "head_sha": "14de12587d5b5b88cee65b0fde447833be92e7c2",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113843167194,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113843167563,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": 37937440324,
+          "event": "push",
+          "head_sha": "14de12587d5b5b88cee65b0fde447833be92e7c2",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113842928732,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113842928991,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "responsibility_id": "R03",
+      "pr": {
+        "number": 15,
+        "merged": true,
+        "head": {
+          "sha": "073016d244becf84e06fd2e72a8f72c2d964f55c",
+          "ref": "lab/r03",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        },
+        "base": {
+          "sha": "576bc28eaabb672065270a33bc0dd100ffaf169a",
+          "ref": "main",
+          "repo": {
+            "full_name": "reallaksh19/relay-v32-e2e-lab"
+          }
+        }
+      },
+      "runs": [
+        {
+          "id": 37938111469,
+          "event": "pull_request",
+          "head_sha": "073016d244becf84e06fd2e72a8f72c2d964f55c",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113845213274,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113845213465,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        },
+        {
+          "id": 37938057680,
+          "event": "push",
+          "head_sha": "073016d244becf84e06fd2e72a8f72c2d964f55c",
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": [
+            {
+              "id": 113845029027,
+              "name": "responsibility-acceptance",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            },
+            {
+              "id": 113845029496,
+              "name": "seed-contract",
+              "status": "completed",
+              "conclusion": "failure",
+              "runner_name": "",
+              "steps": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
