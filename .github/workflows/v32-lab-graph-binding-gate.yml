@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   trusted-graph-binding:
-    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' }}
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && (github.event_name == 'workflow_dispatch' || startsWith(github.event.pull_request.head.ref, 'governance/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
