@@ -86,11 +86,13 @@ def _projection_once(engine: Any, graph: dict, transport: Any) -> dict:
             "nodes": sorted(rows, key=lambda x: x["ref"])}
 
 
-def reconcile(engine: Any, graph: dict, transport: Any) -> dict:
+def reconcile(engine: Any, graph: dict, transport: Any, *, expected_main_sha: str | None = None) -> dict:
     first = _projection_once(engine, graph, transport)
     second = _projection_once(engine, graph, transport)
     if first != second:
         raise ValueError("PROVIDER_SNAPSHOT_CHANGED_BETWEEN_READS")
+    if expected_main_sha is not None and (not SHA.fullmatch(expected_main_sha) or first["source_main_sha"] != expected_main_sha):
+        raise ValueError("PROVIDER_MAIN_DOES_NOT_MATCH_EVENT_SHA")
     return {"schema": "lab-v32-native-material-projection-readonly-v1",
             "source_repository": LAB, "pinned_common_engine_commit": REQUIRED_ENGINE,
             "pinned_common_engine_blob": ENGINE_BLOB,
@@ -112,11 +114,12 @@ def main() -> int:
     p.add_argument("--graph", required=True)
     p.add_argument("--engine", required=True)
     p.add_argument("--output", required=True)
+    p.add_argument("--expected-main-sha", required=True)
     args = p.parse_args()
     try:
         graph = json.loads(Path(args.graph).read_text(encoding="utf-8"))
         engine = load_trusted_engine(Path(args.engine))
-        report = reconcile(engine, graph, engine.GhTransport(LAB))
+        report = reconcile(engine, graph, engine.GhTransport(LAB), expected_main_sha=args.expected_main_sha)
         out = Path(args.output)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
