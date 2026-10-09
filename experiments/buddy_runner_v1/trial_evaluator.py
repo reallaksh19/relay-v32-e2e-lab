@@ -23,7 +23,7 @@ _ROOT_KEYS = {"schema", "case_id", "source_start_sha", "owner_intent_digest",
 _TRIAL_KEYS = {"mode", "run_id", "source_start_sha", "owner_intent_digest",
                "golden_fixture_digest", "case_parameters_digest",
                "runner_kind", "interruption_kind", "golden_result",
-               "readback_status", "phases", "metrics"}
+               "readback_status", "trigger_percent", "trigger_source_kind", "phases", "metrics"}
 _PHASE_KEYS = {"name", "artifact_sha256", "provider_ref", "observed_by", "result"}
 _METRICS = {"agent1_tokens", "runner_tokens", "reviewer_tokens",
             "agent1_cost_microusd", "runner_cost_microusd",
@@ -61,7 +61,7 @@ def _phase(row):
     _validate_sha(row["artifact_sha256"], row["name"])
     for key in ("provider_ref", "observed_by"):
         _require(type(row[key]) is str and 0 < len(row[key]) <= 300, "PHASE_SOURCE_MISSING")
-    _require(row["result"] in ("PASS", "FAIL", "UNKNOWN"), "PHASE_RESULT_INVALID")
+    _require(row["result"] in ("PASS", "FAIL", "UNKNOWN", "NOT_APPLICABLE"), "PHASE_RESULT_INVALID")
 
 
 def _trial(row, root):
@@ -79,17 +79,35 @@ def _trial(row, root):
              "GOLDEN_RESULT_INVALID")
     _require(row["readback_status"] in ("INDEPENDENTLY_ATTESTED", "STRUCTURAL_ONLY",
                                         "NOT_OBSERVED"), "READBACK_STATUS_INVALID")
+    percent, source_kind = row["trigger_percent"], row["trigger_source_kind"]
+    if row["mode"] == "CONTROL":
+        _require(percent is None and source_kind == "NONE", "CONTROL_TRIGGER_INVALID")
+    else:
+        mid = {"EARLY_50": 50, "TARGET_70": 70, "LATE_85": 85}[row["mode"]]
+        _require(type(percent) is int and mid - 10 <= percent <= mid + 10 and
+                 source_kind in ("PROVIDER_REPORTED", "CALIBRATED_EPISODE", "AGENT_SELF_ESTIMATE"),
+                 "TREATMENT_TRIGGER_INVALID")
     phases = row["phases"]
     _require(type(phases) is list and len(phases) == len(PHASES), "PHASE_COUNT_INVALID")
     for event in phases:
         _phase(event)
     _require([event["name"] for event in phases] == list(PHASES),
              "PHASE_ORDER_INVALID")
+    if row["mode"] == "CONTROL":
+        skipped = {"RUNNER_BLIND_READ", "RUNNER_PLAN_SEALED", "WITNESS_PROVIDER_READBACK",
+                   "AGENT1_INTERRUPTED", "STAGE2_SOURCE_RECONCILED"}
+        _require(all(event["result"] == "NOT_APPLICABLE" for event in phases
+                     if event["name"] in skipped),
+                 "CONTROL_RUNNER_PHASE_MUST_BE_SKIPPED")
     metrics = row["metrics"]
     _require(type(metrics) is dict and set(metrics) == _METRICS, "METRIC_SCHEMA_INVALID")
     for key, value in metrics.items():
         _require(value is None or (type(value) is int and value >= 0),
                  "METRIC_MISSING_OR_INVALID:" + key)
+    if row["mode"] == "CONTROL":
+        _require(metrics["runner_tokens"] in (0, None) and
+                 metrics["runner_cost_microusd"] in (0, None),
+                 "CONTROL_RUNNER_COST_MUST_BE_ZERO")
     return row
 
 
@@ -119,6 +137,8 @@ def evaluate(value):
             "mode": row["mode"], "golden_result": row["golden_result"],
             "runner_kind": row["runner_kind"],
             "actual_interruption": row["interruption_kind"],
+            "claimed_trigger_percent": row["trigger_percent"],
+            "trigger_source_kind": row["trigger_source_kind"],
             "phase_pass_count": sum(p["result"] == "PASS" for p in row["phases"]),
             "phase_unknown_count": sum(p["result"] == "UNKNOWN" for p in row["phases"]),
             "total_tokens": sum(m[k] for k in ("agent1_tokens","runner_tokens","reviewer_tokens"))
@@ -145,10 +165,10 @@ def evaluate(value):
     return {
         "schema": "v32-buddy-br09-evaluation-v1",
         "case_id": value["case_id"],
-        "same_frozen_source_and_fixture": True,
+        "matched_frozen_source_claims_only": True,
         "comparison_order": list(MODES),
         "comparisons": comparisons,
-        "all_costs_observed_in_supplied_record": all_measured,
+        "all_metric_fields_supplied_not_authenticated": all_measured,
         "claimed_real_successor_contract_complete": real_successor,
         "external_evidence_authentication": "NOT_VERIFIED_BY_THIS_EVALUATOR",
         "qualification": "EXTERNAL_VERIFIER_REQUIRED",
