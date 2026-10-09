@@ -23,7 +23,10 @@ def build():
     for idx, mode in enumerate(MODES):
         phases=[{"name":name, "artifact_sha256":"sha256:"+format(i+1,"064x"),
                  "provider_ref":"unqualified:test-only-fixture",
-                 "observed_by":"synthetic-recorder", "result":"PASS"}
+                 "observed_by":"synthetic-recorder",
+                 "result":("NOT_APPLICABLE" if idx==0 and name in {
+                     "RUNNER_BLIND_READ", "RUNNER_PLAN_SEALED", "WITNESS_PROVIDER_READBACK",
+                     "AGENT1_INTERRUPTED", "STAGE2_SOURCE_RECONCILED"} else "PASS")}
                 for i,name in enumerate(PHASES)]
         trials.append({
             "mode": mode, "run_id": "trial-"+str(idx),
@@ -34,8 +37,12 @@ def build():
             "runner_kind":"NONE" if idx==0 else "DETERMINISTIC_FIXTURE",
             "interruption_kind":"NONE" if idx==0 else "SIMULATED",
             "golden_result":"PASS", "readback_status":"STRUCTURAL_ONLY",
+            "trigger_percent":None if idx==0 else (50,70,85)[idx-1],
+            "trigger_source_kind":"NONE" if idx==0 else "AGENT_SELF_ESTIMATE",
             "phases":phases,
-            "metrics":{key: (100+idx) for key in METRIC_KEYS},
+            "metrics":{key: (0 if idx==0 and key in
+                        ("runner_tokens","runner_cost_microusd") else 100+idx)
+                        for key in METRIC_KEYS},
         })
     return {**BASE,"trials":trials}
 
@@ -48,7 +55,7 @@ class TrialEvaluatorTests(unittest.TestCase):
         self.assertEqual("NOT_GRANTED",report["production_write_authority"])
         self.assertFalse(report["claimed_real_successor_contract_complete"])
         self.assertEqual(3*101,report["comparisons"][1]["total_cost_microusd"])
-        self.assertTrue(report["all_costs_observed_in_supplied_record"])
+        self.assertTrue(report["all_metric_fields_supplied_not_authenticated"])
 
     def test_all_self_claimed_real_success_does_not_grant_merge(self):
         item=build()
@@ -130,6 +137,26 @@ class TrialEvaluatorTests(unittest.TestCase):
         item=build()
         item["trials"][1]["owner_approved"]=True
         with self.assertRaisesRegex(TrialError,"TRIAL_SCHEMA_INVALID"):
+            evaluate(item)
+
+    def test_trigger_bands_and_source_type_checked(self):
+        item=build()
+        item["trials"][1]["trigger_percent"]=87
+        with self.assertRaisesRegex(TrialError,"TREATMENT_TRIGGER_INVALID"):
+            evaluate(item)
+        item=build()
+        item["trials"][2]["trigger_source_kind"]="NONE"
+        with self.assertRaisesRegex(TrialError,"TREATMENT_TRIGGER_INVALID"):
+            evaluate(item)
+
+    def test_control_must_skip_runner_steps_and_have_no_runner_cost(self):
+        item=build()
+        item["trials"][0]["phases"][1]["result"]="PASS"
+        with self.assertRaisesRegex(TrialError,"CONTROL_RUNNER_PHASE_MUST_BE_SKIPPED"):
+            evaluate(item)
+        item=build()
+        item["trials"][0]["metrics"]["runner_cost_microusd"]=9
+        with self.assertRaisesRegex(TrialError,"CONTROL_RUNNER_COST_MUST_BE_ZERO"):
             evaluate(item)
 
     def test_duplicate_json_keys_refused(self):
