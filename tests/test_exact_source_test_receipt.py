@@ -12,7 +12,7 @@ spec=importlib.util.spec_from_file_location('receipt',HERE/'scripts'/'exact_sour
 gate=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
 MANIFEST=json.loads((HERE/'evidence'/'COMMITTED_ACCEPTANCE_BLOBS_V1.json').read_text())
-SOURCE=HERE/'local_exact_checkout'
+SOURCE=HERE
 
 class EvidenceReceiptTests(unittest.TestCase):
     def setUp(self):
