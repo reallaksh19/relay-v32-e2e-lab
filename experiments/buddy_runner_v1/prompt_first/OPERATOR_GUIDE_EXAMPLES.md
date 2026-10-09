@@ -4,6 +4,12 @@
 
 **Sources used as inspiration, not copied prompts:** Common PR #880 (real LFJ / XML→CII2019 succession and observed contamination), #881 (Common #733 V3.2 Stage 1/Stage 2), and #882 (V3.5 cross-surface lifecycle and emergency handover). Their governing versions, actual original Owner sources and live responsibilities remain distinct; this is a reusable thinking format, not a merger of three programmes.
 
+## 0. Owner command and readiness entrypoint
+
+Send **“Prepare for runner”** in the ONGOING Agent A engineering conversation, using [PREPARE_FOR_RUNNER_ENTRYPOINT.md](PREPARE_FOR_RUNNER_ENTRYPOINT.md) as the standing instruction. Agent A prepares original-source and WHAT/WHY facts now, and at ordinary TASK_EVIDENCE checkpoints assesses any actually available context-life evidence. At approximately 60% life consumed it suggests preparation; at approximately 70% it proactively says **“Time for Runner”**; at 85% or severe interruption risk it recommends urgent action. These are advisory episode-life heuristics, NOT V3.2 DELP progress, task-completion percentages or automatically visible ChatGPT token metrics.
+
+This command does NOT itself launch Runner B. The operator gives B ONLY the prepared sanitized original-source packet and Stage 1 thinking template in a fresh restricted session. The detailed Agent A readiness report and live code remain outside Stage 1 and may be disclosed only after the Stage 1 freeze. If context usage is unavailable, report UNKNOWN and reason from warnings/next-unit budget without inventing 70%.
+
 ## 1. WHAT this design means by "make the agent think"
 
 A useful Runner is NOT an AI asked to summarize Agent A's progress. It must be able to:
