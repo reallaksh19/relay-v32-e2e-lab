@@ -55,6 +55,12 @@ class ProviderReadbackTests(unittest.TestCase):
  def test_future_signing_time_denied(self):
   bad={**self.witness,'created_at':'2026-10-09T11:59:59Z','updated_at':'2026-10-09T11:59:59Z'}
   with self.assertRaisesRegex(Stage1Error,'CLAIM_POSTDATES'):self.verify(w=bad)
+ def test_actual_connector_shape_without_timestamps_fails_closed(self):
+  item={**self.witness,'url':self.witness['html_url'], 'created_at':None,
+        'updated_at':None}
+  del item['html_url']
+  with self.assertRaisesRegex(Stage1Error,'GITHUB_TIME_NOT_UTC'):
+   self.verify(w=item)
  def test_mismatched_witness_id_denied(self):
   with self.assertRaisesRegex(Stage1Error,'WITNESS_ID_MISMATCH'):
    self.verify(expected_witness_id='unknown')
