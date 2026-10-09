@@ -101,6 +101,12 @@ class ProbeContract(unittest.TestCase):
         with TemporaryDirectory() as td:
             f=Path(td)/'engine.py';f.write_text('raise RuntimeError("DANGER")')
             with self.assertRaisesRegex(ValueError,'ENGINE_BLOB_NOT_PINNED'):probe.load_trusted_engine(f)
+    def test_event_main_mismatch_rejected(self):
+        with self.assertRaisesRegex(ValueError,"DOES_NOT_MATCH_EVENT_SHA"):
+            probe.reconcile(Native(),graph(),Provider(),expected_main_sha="b"*40)
+    def test_event_main_exact_match(self):
+        r=probe.reconcile(Native(),graph(),Provider(),expected_main_sha="a"*40)
+        self.assertEqual("a"*40,r["source_main_sha"])
     def test_missing_engine_fail_closed(self):
         with self.assertRaisesRegex(ValueError,'ENGINE_FILE_MISSING'):probe.load_trusted_engine(Path('/no/such/engine.py'))
 
