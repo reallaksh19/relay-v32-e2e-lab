@@ -21,7 +21,7 @@ packets must pass exact-key validation.
 plan from the start tree and the permitted Stage 1 facts. Trusted recorder
 seals plan/activation/start-manifest identities before Stage 2 disclosure.
 
-**Stage 2 and promotion:** NOT IMPLEMENTED in this slice.
+**Stage 2:** read-only reconciliation and local custody-event gate implemented for the research harness. **Exclusive-writer promotion:** NOT IMPLEMENTED.
 
 ## CLI (run the trusted recorder OUTSIDE the original checkout)
 
@@ -102,6 +102,75 @@ unit consuming remaining reliable runway triggers earlier. Missing telemetry
 is UNKNOWN, not HEALTHY. Provider-reported values are still untrusted when
 merely supplied by an agent; source_trust remains explicitly unverified.
 
+## BR-06 — Recorder-keyed event ordering (experiment only)
+
+The trusted recorder must hold an independent random 32-byte-or-longer secret
+in its own environment (BUDDY_RECORDER_KEY_HEX), inaccessible to Agent 1,
+Runner, chat, source control and GitHub Actions logs. Do not use the fixed
+test-only key from test_recorder_custody.py. Linux fcntl file locking is used;
+this module does not provide a Windows-hosted recorder implementation.
+
+BR-06 implements a fail-closed four-event sequence in
+recorder_custody.py:
+
+1. START_PINNED — hash of original source manifest and actual start SHA.
+2. RUNNER_REQUESTED — validated activation digest (parsed readiness evidence,
+   explicitly still unauthenticated until a provider/recorder confirms origin).
+3. PLAN_SEALED — stage1 independent-plan receipt and sealed gate digests.
+4. STAGE2_DISCLOSED — digest of post-seal disclosure manifest, bound to one
+   current candidate HEAD and incumbent-plan digest.
+
+Each append locks the recorder journal, verifies its MAC chain + expected
+prior event and writes a new HMAC-SHA256 record with fsync. The journal must
+reside in recorder-controlled storage, outside agent-controlled directories.
+A previously observed last MAC can be supplied as --last-mac on append/verify;
+a self-copied journal MAC is NOT independently witnessed evidence.
+
+Recoding the test sequence with trusted tools:
+
+    python /trusted-tools/experiments/buddy_runner_v1/recorder_custody.py start \
+      --snapshot /isolated/run-001 --journal /recorder-only/run-001.jsonl
+
+    python /trusted-tools/experiments/buddy_runner_v1/recorder_custody.py request \
+      --snapshot /isolated/run-001 --journal /recorder-only/run-001.jsonl \
+      --last-mac PREVIOUS_EXTERNALLY_RETAINED_MAC
+
+    python /trusted-tools/experiments/buddy_runner_v1/recorder_custody.py seal \
+      --snapshot /isolated/run-001 --journal /recorder-only/run-001.jsonl \
+      --receipt /recorder-only/run-001.plan.json \
+      --gate /recorder-only/run-001.gate.json \
+      --last-mac PREVIOUS_EXTERNALLY_RETAINED_MAC
+
+    python /trusted-tools/experiments/buddy_runner_v1/recorder_custody.py disclose \
+      --snapshot /isolated/run-001 --journal /recorder-only/run-001.jsonl \
+      --receipt /recorder-only/run-001.plan.json \
+      --gate /recorder-only/run-001.gate.json \
+      --disclosure /recorder-only/run-001.disclosure.json \
+      --last-mac PREVIOUS_EXTERNALLY_RETAINED_MAC
+
+The disclosure JSON must contain exactly: run_id, candidate_sha (40 hex),
+incumbent_plan_digest (sha256), source_context_digest (sha256). Its digests
+bind caller-supplied facts; they do not prove CI/PR correctness by themselves.
+An actual independent recorder MUST anchor each phase before disclosure
+through an independently controlled append-only provider artifact or
+timestamped storage. The local code cannot prove historical timing,
+provenance, author identity, or prevent full journal rollback without an
+external anchor.
+
+**Stage 2 CLI is now fail-closed:** requires --custody-journal,
+--disclosure, and --external-anchor; the recorder's secret is read from
+BUDDY_RECORDER_KEY_HEX, never passed through the command line. It rejects a
+missing disclosure, mismatched candidate/Agent 1 plan, modified MAC chain,
+absent anchor or wrong phase order before current source reconciliation.
+A caller may provide its own MAC, so external authentication still requires
+independent custody, not simply matching a local digest.
+
+The direct Python reconcile(...) API remains usable in unit tests and
+returns UNATTESTED_LOCAL_LIBRARY_CALL if no custody proof is supplied.
+Neither API can grant source-write permission, Owner authority, or merge
+permission. Stage 2 reconciliation remains local-source only, with provider
+CI/PR truth UNKNOWN.
+
 ## Stage 2 read-only reconciliation (BR-04, experimental)
 
 Only after the independent Stage 1 plan is recorded and sealed, expose the
@@ -128,7 +197,10 @@ Run the reconciler FROM A TRUSTED TOOL INSTALLATION OUTSIDE the source checkout:
       --head VERIFIED_CURRENT_40_HEX_SHA \
       --incumbent-plan /recorder-only/incumbent.json \
       --decisions /recorder-only/runner-comparison.json \
-      --report /recorder-only/read-only-stage2.json
+      --report /recorder-only/read-only-stage2.json \
+      --custody-journal /recorder-only/run-001.jsonl \
+      --disclosure /recorder-only/run-001.disclosure.json \
+      --external-anchor EXTERNALLY_RETAINED_LAST_MAC
 
 This stage rejects a stale candidate HEAD, dirty/untracked working files,
 missing/tampered Stage 1 gate, an unrelated or non-descendant source, an
@@ -159,11 +231,11 @@ Trusted immutable recorder storage, temporal order attestation and source
 provenance remain to be built. Its contents must not be writable by either
 coding agent.
 
-Pending: Agent Health working-runway calibration; event-gated TIME_FOR_RUNNER
-advisory in existing TASK_EVIDENCE without DELP score changes; source-pinned
-Owner/issue snapshot and cutoff guard; real Runner execution; independent
-Stage 2 plan reconciliation; single-writer fenced promotion; 50/70/85% trial,
-clean no-injury control and independent measured recovery economics.
+Pending: actual Agent Health provider observations and calibration; source-pinned
+Owner/issue historical cutoff and authenticated provenance; a real Runner
+without network/live GitHub access; independent external immutable recorder
+custody; provider-current PR/CI; single-writer fenced promotion; repeated
+50/70/85% and control trials with measured total recovery cost.
 
 No Common frozen V3.2 source, native owner contract or existing R01 product
 file changed. These unit tests use temporary Git repositories, and a passing
