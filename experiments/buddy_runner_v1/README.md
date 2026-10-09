@@ -102,6 +102,30 @@ unit consuming remaining reliable runway triggers earlier. Missing telemetry
 is UNKNOWN, not HEALTHY. Provider-reported values are still untrusted when
 merely supplied by an agent; source_trust remains explicitly unverified.
 
+## BR-08 — Actual namespace fixture and provider readback preflight
+
+See [BR08_QUALIFICATION.md](BR08_QUALIFICATION.md) for reproducible
+steps, exact qualification boundaries, and the failed witness-admission
+preflight.
+
+The BR-08 subprocess uses real Linux user, mount, network, PID and IPC
+namespaces (unshare), private tmpfs root/chroot, read-only source mount and
+a separate empty output mount. The sandboxed executable is a DETERMINISTIC
+TEST FIXTURE, not an LLM. One integrated rehearsal verifies that the
+original frozen source can drive an isolated plan, sealed before read-only
+Stage2 reconciliation after simulated Agent1 progress. It does not run
+a real independent AI or observe a real Agent1 interruption.
+
+provider_readback.py handles GitHub provider-shaped comments but always
+reports STRUCTURALLY_VALIDATED_ONLY, never an authenticated online readback.
+The connected GitHub comment reader returned null created_at/updated_at
+for inspected Common #879 evidence; chronological witness admission
+therefore FAILS CLOSED. Independent signing provider remains unconfigured.
+
+Local Python suite: 82/82 PASS at BR08 implementation baseline.
+Hosted GitHub Actions, witness independence and Owner-approved writer
+promotion remain NOT QUALIFIED.
+
 ## BR-07 — Detached external witness + fail-closed Runner launch
 
 Two security boundaries have now been added to the experimental helpers.
