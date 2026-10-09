@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from runner_readiness import ReadinessError, assess, render_task_evidence, parse_task_evidence
+from runner_readiness import ReadinessError, assess, render_task_evidence, parse_task_evidence, strict_json_loads
 
 BASE = {
     "run_id": "buddy-run-001", "responsibility": "reallaksh19/relay-v32-e2e-lab#4",
@@ -94,6 +94,16 @@ class ReadinessTests(unittest.TestCase):
     def test_ambiguous_extra_comment_rejected(self):
         with self.assertRaises(ReadinessError):
             parse_task_evidence(render_task_evidence(self.make()) + "later plan\n")
+
+    def test_non_string_identity_values_fail_closed(self):
+        for field, val in [("run_id", 123), ("responsibility", []), ("candidate_sha", None),
+                           ("source_kind", []), ("confidence", {}), ("cognitive_warning", 0)]:
+            with self.subTest(field=field), self.assertRaises(ReadinessError):
+                self.make(**{field: val})
+
+    def test_duplicate_json_key_is_refused(self):
+        with self.assertRaisesRegex(ReadinessError, "DUPLICATE_JSON_KEY"):
+            strict_json_loads('{"run_id":"one","run_id":"two"}')
 
     def test_cli_output_and_verify(self):
         with tempfile.TemporaryDirectory() as d:
