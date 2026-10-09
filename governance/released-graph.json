@@ -237,6 +237,7 @@
       "parent": "reallaksh19/relay-v32-e2e-lab#2",
       "weight": 3,
       "responsibility_id": "R01",
+      "primary_pr": "reallaksh19/relay-v32-e2e-lab#8",
       "candidate_ref": "lab/r01",
       "critical": true,
       "work_class": "PRODUCT",
