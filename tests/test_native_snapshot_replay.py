@@ -15,12 +15,11 @@ REPO=mod.REPO
 
 
 def inputs():
-    nodes=[{'ref':f'{REPO}#{n}','kind':'ROOT' if n==1 else 'INTERMEDIATE'} for n in (1,2,3)]
-    for i, (pr,branch) in enumerate([(8,'lab/r01'),(13,'lab/r02'),(15,'lab/r03')],start=4):
-        nodes.append({'ref':f'{REPO}#{i}', 'kind':'LEAF', 'primary_pr':f'{REPO}#{pr}',
-                      'candidate_ref':branch,'responsibility_id':f'R0{i-3}'})
-    graph={'programme':{'repository':REPO,'base_ref':'main'},'nodes':nodes}
-    raw=json.dumps(graph,sort_keys=True).encode()
+    # Test the real approved release bytes, not a plausible six-node mock.
+    # The new source-custody gate requires exact historical graph identity.
+    raw=(SOURCE.parents[1] / 'governance' / 'released-graph.json').read_bytes()
+    graph=json.loads(raw)
+    assert mod.git_blob(raw)==mod.RELEASED_GRAPH_BLOB
     pulls={}
     for n,branch in [(8,'lab/r01'),(13,'lab/r02'),(15,'lab/r03')]:
         pulls[str(n)]={'number':n,'merged':True,
@@ -76,7 +75,7 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'MAIN_MOVED'):self.check()
     def test_graph_blob_drift_rejected(self):
         self.raw+=b'\n'
-        with self.assertRaisesRegex(ValueError,'GRAPH_BLOB_MISMATCH'):self.check()
+        with self.assertRaisesRegex(ValueError,'RELEASED_GRAPH_SOURCE_BLOB_NOT_PINNED'):self.check()
     def test_wrong_repository(self):
         self.snapshot['repository']='fake/repo'
         with self.assertRaisesRegex(ValueError,'SNAPSHOT_SCHEMA_OR_REPO'):self.check()
@@ -109,11 +108,11 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'PR_SET_INCOMPLETE'):self.check()
     def test_source_graph_changed_weights(self):
         self.graph['nodes'][3]['weight']=35
-        with self.assertRaisesRegex(ValueError,'GRAPH_BLOB_MISMATCH'):
+        with self.assertRaisesRegex(ValueError,'RELEASED_GRAPH_SOURCE_BLOB_NOT_PINNED'):
             mod.validate_snapshot(self.graph,json.dumps(self.graph,sort_keys=True).encode(),self.snapshot)
     def test_disallowed_branch_binding(self):
         self.graph['nodes'][3]['candidate_ref']='feature/random'
-        with self.assertRaisesRegex(ValueError,'UNRELEASED_LEAF'):self.check()
+        with self.assertRaisesRegex(ValueError,'GRAPH_MAPPING_DIFFERS_FROM_PINNED_BYTES'):self.check()
     def test_capture_issue_title_race(self):
         d={f'repos/{REPO}/commits/main':{'sha':'a'*40}}
         for i in range(1,7):d[f'repos/{REPO}/issues/{i}']={'title':f'issue-{i}'}
@@ -154,6 +153,35 @@ class ReplayTests(unittest.TestCase):
     def test_unexpected_main_ref_rejected(self):
         with self.assertRaisesRegex(ValueError,'UNRELEASED_BASE_REF'):
             mod.SnapshotTransport(self.snapshot).get_commit_sha('develop')
+    def test_pristine_graph_exact_release_source(self):
+        self.assertEqual(mod.RELEASED_GRAPH_BLOB,mod.git_blob(self.raw))
+        mod.require_released_graph(self.graph,self.raw)
+
+    def test_coherent_graph_and_snapshot_rehash_is_not_authority(self):
+        # The old guard accepted a rewritten graph if the snapshot's blob was
+        # recomputed consistently. The new guard rejects this even on replay.
+        self.graph['nodes'][3]['weight']=99
+        self.raw=json.dumps(self.graph,sort_keys=True).encode()
+        self.snapshot['graph_git_blob']=mod.git_blob(self.raw)
+        with self.assertRaisesRegex(ValueError,'RELEASED_GRAPH_SOURCE_BLOB_NOT_PINNED'):
+            mod.replay(self.graph,self.raw,self.snapshot,FakeEngine())
+
+    def test_changed_mapping_against_unchanged_approved_bytes_refused(self):
+        self.graph['nodes'][3]['weight']=99
+        with self.assertRaisesRegex(ValueError,'GRAPH_MAPPING_DIFFERS_FROM_PINNED_BYTES'):
+            self.check()
+
+    def test_capture_refuses_changed_graph_before_any_get(self):
+        self.graph['nodes'][3]['weight']=99
+        changed=json.dumps(self.graph,sort_keys=True).encode()
+        provider_calls=[]
+        def forbidden_get(url):
+            provider_calls.append(url)
+            raise AssertionError("Unexpected provider GET before graph approval")
+        with self.assertRaisesRegex(ValueError,'RELEASED_GRAPH_SOURCE_BLOB_NOT_PINNED'):
+            mod.capture(self.graph,changed,forbidden_get)
+        self.assertEqual([],provider_calls)
+
     def test_snapshot_aliasing_does_not_mutate(self):
         t=mod.SnapshotTransport(self.snapshot)
         p=t.get_pull(8);p['head']['ref']='evil'
