@@ -57,6 +57,22 @@ satisfy independent witness custody.
 
 Ed25519 fixture tests use ephemeral synthetic keys only.
 
+## BR-08 Stage2 integration gate
+
+The Stage2 CLI (stage2_reconcile.py) requires six additional inputs,
+alongside its BR-07 pinned signature, original source and recorder event
+chain: provider-witness-comment, provider-disclosure-comment,
+provider-repo, provider-issue, provider-witness-author and
+provider-agent-author. It verifies the claimed provider records BEFORE
+opening the newer code. Synthetic test records pass the structural
+contract; real connected GitHub comment records with null timestamps
+fail closed. Input file provenance remains independently unverified,
+so Stage2 output continues to report no Owner execution/write authority.
+
+This is a structural gate rather than an online authentication plugin.
+The issue author must separately provide a trusted provider fetch,
+identity policy and independent external witness custody.
+
 ## Exact admission gates still outstanding
 
 1. Externally pinned independent witness identity/key, independent signing
