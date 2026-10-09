@@ -15,6 +15,7 @@ import subprocess
 from runner_protocol import verify_gate
 from runner_stage1 import Stage1Error, _exclusive_json, digest
 from recorder_custody import validate_disclosure, secret_from_env
+from witness_anchor import verify_witness
 
 _SHA = re.compile(r"^[a-f0-9]{40}$")
 _ALLOWED_R01_WRITE = frozenset({"src/csv_auditor/parser.py"})
@@ -141,6 +142,10 @@ def main() -> None:
         ap.add_argument("--" + key, required=True)
     ap.add_argument("--custody-journal", required=True)
     ap.add_argument("--disclosure", required=True)
+    ap.add_argument("--witness-receipt", required=True)
+    ap.add_argument("--witness-public-key", required=True)
+    ap.add_argument("--witness-key-fingerprint", required=True)
+    ap.add_argument("--witness-id", required=True)
     ap.add_argument("--external-anchor", required=True)
     ns = ap.parse_args()
     try:
@@ -153,9 +158,18 @@ def main() -> None:
         custody = validate_disclosure(ns.custody_journal, secret_from_env(),
                                       ns.snapshot, ns.receipt, ns.gate,
                                       disclosure, external_anchor=ns.external_anchor)
+        witness = verify_witness(Path(ns.witness_receipt).read_bytes(),
+                                 Path(ns.witness_public_key).read_bytes(),
+                                 expected_public_key_sha256=ns.witness_key_fingerprint,
+                                 journal=Path(ns.custody_journal),
+                                 recorder_key=secret_from_env(),
+                                 snapshot=Path(ns.snapshot), plan_receipt=Path(ns.receipt),
+                                 gate=Path(ns.gate), expected_witness_id=ns.witness_id,
+                                 expected_last_mac=ns.external_anchor)
         result = reconcile(ns.snapshot, ns.receipt, ns.gate, ns.repo, ns.head,
                            incumbent, decisions, ns.report,
                            custody_observation={
+                               "independent_witness": witness,
                                "state": "LOCAL_RECORDER_EVENT_CHAIN_VERIFIED",
                                "journal_event_count": custody["events"],
                                "externally_supplied_anchor_checked": custody["external_anchor_checked"],
