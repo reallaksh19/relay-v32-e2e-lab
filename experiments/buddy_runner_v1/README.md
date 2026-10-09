@@ -23,20 +23,25 @@ seals plan/activation/start-manifest identities before Stage 2 disclosure.
 
 **Stage 2 and promotion:** NOT IMPLEMENTED in this slice.
 
-## CLI (run from original clean START checkout with a trusted recorder)
+## CLI (run the trusted recorder OUTSIDE the original checkout)
 
-    python experiments/buddy_runner_v1/runner_protocol.py start \
+The original seed commit does not contain the new experimental Runner script.
+Install its exact reviewed version in a trusted recorder environment; invoke
+that copy against the clean original Agent 1 source checkout. Never copy the
+recorder's implementation into the original source tree just to run capture.
+
+    python /trusted-tools/experiments/buddy_runner_v1/runner_protocol.py start \
       --repo . --snapshot /isolated/run-001 --run run-001 \
       --start-sha ACTUAL_START_SHA --initial-packet /recorder/original-what-why.json
 
 After Agent 1 continues coding and signals TIME_FOR_RUNNER:
 
-    python experiments/buddy_runner_v1/runner_protocol.py activate \
+    python /trusted-tools/experiments/buddy_runner_v1/runner_protocol.py activate \
       --snapshot /isolated/run-001 --packet /recorder/late-what-why.json
 
 Once Runner authors its INDEPENDENT plan, recorder-owned sealing:
 
-    python experiments/buddy_runner_v1/runner_protocol.py seal \
+    python /trusted-tools/experiments/buddy_runner_v1/runner_protocol.py seal \
       --snapshot /isolated/run-001 \
       --receipt /recorder-only/run-001.plan.json \
       --gate /recorder-only/run-001.gate.json \
@@ -44,7 +49,7 @@ Once Runner authors its INDEPENDENT plan, recorder-owned sealing:
 
 Verify before Stage 2 reveal:
 
-    python experiments/buddy_runner_v1/runner_protocol.py verify-gate \
+    python /trusted-tools/experiments/buddy_runner_v1/runner_protocol.py verify-gate \
       --snapshot /isolated/run-001 \
       --receipt /recorder-only/run-001.plan.json \
       --gate /recorder-only/run-001.gate.json
