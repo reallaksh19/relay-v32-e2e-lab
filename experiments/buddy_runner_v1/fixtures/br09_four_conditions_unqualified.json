@@ -1,0 +1,333 @@
+{
+  "schema": "v32-buddy-br09-trial-set-v1",
+  "case_id": "R01-BR09-SYNTHETIC-NO-PROVIDER-EVIDENCE",
+  "source_start_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+  "owner_intent_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "golden_fixture_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "trials": [
+    {
+      "mode": "CONTROL",
+      "run_id": "br09-synthetic-0",
+      "source_start_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+      "owner_intent_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "golden_fixture_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "case_parameters_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "runner_kind": "NONE",
+      "interruption_kind": "NONE",
+      "golden_result": "UNKNOWN",
+      "readback_status": "NOT_OBSERVED",
+      "phases": [
+        {
+          "name": "ORIGINAL_START",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_BLIND_READ",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "NOT_APPLICABLE"
+        },
+        {
+          "name": "RUNNER_PLAN_SEALED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "NOT_APPLICABLE"
+        },
+        {
+          "name": "WITNESS_PROVIDER_READBACK",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "NOT_APPLICABLE"
+        },
+        {
+          "name": "AGENT1_INTERRUPTED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "NOT_APPLICABLE"
+        },
+        {
+          "name": "STAGE2_SOURCE_RECONCILED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "NOT_APPLICABLE"
+        },
+        {
+          "name": "GOLDEN_ORACLE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "COST_CAPTURE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        }
+      ],
+      "metrics": {
+        "agent1_tokens": null,
+        "runner_tokens": null,
+        "reviewer_tokens": null,
+        "agent1_cost_microusd": null,
+        "runner_cost_microusd": null,
+        "reviewer_cost_microusd": null,
+        "recovery_seconds": null
+      },
+      "trigger_percent": null,
+      "trigger_source_kind": "NONE"
+    },
+    {
+      "mode": "EARLY_50",
+      "run_id": "br09-synthetic-1",
+      "source_start_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+      "owner_intent_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "golden_fixture_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "case_parameters_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "runner_kind": "DETERMINISTIC_FIXTURE",
+      "interruption_kind": "SIMULATED",
+      "golden_result": "UNKNOWN",
+      "readback_status": "NOT_OBSERVED",
+      "phases": [
+        {
+          "name": "ORIGINAL_START",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_BLIND_READ",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_PLAN_SEALED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "WITNESS_PROVIDER_READBACK",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "AGENT1_INTERRUPTED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "STAGE2_SOURCE_RECONCILED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "GOLDEN_ORACLE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "COST_CAPTURE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        }
+      ],
+      "metrics": {
+        "agent1_tokens": null,
+        "runner_tokens": null,
+        "reviewer_tokens": null,
+        "agent1_cost_microusd": null,
+        "runner_cost_microusd": null,
+        "reviewer_cost_microusd": null,
+        "recovery_seconds": null
+      },
+      "trigger_percent": 50,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
+    },
+    {
+      "mode": "TARGET_70",
+      "run_id": "br09-synthetic-2",
+      "source_start_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+      "owner_intent_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "golden_fixture_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "case_parameters_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "runner_kind": "DETERMINISTIC_FIXTURE",
+      "interruption_kind": "SIMULATED",
+      "golden_result": "UNKNOWN",
+      "readback_status": "NOT_OBSERVED",
+      "phases": [
+        {
+          "name": "ORIGINAL_START",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_BLIND_READ",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_PLAN_SEALED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "WITNESS_PROVIDER_READBACK",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "AGENT1_INTERRUPTED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "STAGE2_SOURCE_RECONCILED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "GOLDEN_ORACLE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "COST_CAPTURE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        }
+      ],
+      "metrics": {
+        "agent1_tokens": null,
+        "runner_tokens": null,
+        "reviewer_tokens": null,
+        "agent1_cost_microusd": null,
+        "runner_cost_microusd": null,
+        "reviewer_cost_microusd": null,
+        "recovery_seconds": null
+      },
+      "trigger_percent": 70,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
+    },
+    {
+      "mode": "LATE_85",
+      "run_id": "br09-synthetic-3",
+      "source_start_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+      "owner_intent_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "golden_fixture_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "case_parameters_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "runner_kind": "DETERMINISTIC_FIXTURE",
+      "interruption_kind": "SIMULATED",
+      "golden_result": "UNKNOWN",
+      "readback_status": "NOT_OBSERVED",
+      "phases": [
+        {
+          "name": "ORIGINAL_START",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_BLIND_READ",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "RUNNER_PLAN_SEALED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "WITNESS_PROVIDER_READBACK",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "AGENT1_INTERRUPTED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "STAGE2_SOURCE_RECONCILED",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "GOLDEN_ORACLE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        },
+        {
+          "name": "COST_CAPTURE",
+          "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
+          "observed_by": "synthetic_fixture_only",
+          "result": "UNKNOWN"
+        }
+      ],
+      "metrics": {
+        "agent1_tokens": null,
+        "runner_tokens": null,
+        "reviewer_tokens": null,
+        "agent1_cost_microusd": null,
+        "runner_cost_microusd": null,
+        "reviewer_cost_microusd": null,
+        "recovery_seconds": null
+      },
+      "trigger_percent": 85,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
+    }
+  ]
+}
