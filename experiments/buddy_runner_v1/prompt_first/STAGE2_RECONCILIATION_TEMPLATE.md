@@ -29,6 +29,9 @@ At this point you still have **NO product-write, merge, roadmap, or takeover aut
 | Golden fixtures and consumers | [[authentic input hashes, positive/negative oracles, actual runtime/browser outputs where required]] |
 | Operational custody | [[current Agent A writer/lease, pending actions, privacy constraints, proposed transfer authority]] |
 | Changed circumstances | [[Owner decisions and source changes after Stage 1; timestamp/provenance]] |
+| Actual Runner readiness checkpoint | [[Agent A advisory; provider measured / episode calibrated / self-estimated / unavailable; observed timestamp; why requested; no conflation with engineering P/E/D]] |
+
+**Re-evaluate the trigger, not just the implementation.** The earlier Owner “Prepare for runner” request and Agent A's later “Time for Runner” recommendation must be compared with actual evidence. Was 70% based on a real provider numerator/denominator, a rough episode estimate, or no measurable percentage at all? Was early activation explained by the next work unit, cognitive warning or interruption risk? If provenance is missing, classify the trigger as UNKNOWN instead of retroactively inventing a measured threshold. A legitimate trigger does NOT authenticate blind Stage 1 or authorize takeover.
 
 Do not treat the predecessor's issue comment, performance claim, PR status or a green test name as source truth. Verify directly where permitted. If the past Agent A is unavailable, mark **INTERRUPTED_NO_PACKET** and NEVER attribute a third party's reconstruction as Agent A's actual words.
 
