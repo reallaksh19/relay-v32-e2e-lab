@@ -60,6 +60,46 @@ runner_protocol.py activation and bound gate, not a bare plan receipt.
 
     python -m unittest discover -s experiments/buddy_runner_v1 -p 'test_*.py' -v
 
+
+## Stage 2 read-only reconciliation (BR-04, experimental)
+
+Only after the independent Stage 1 plan is recorded and sealed, expose the
+current Agent 1 source and its plan. The Stage 2 command validates the Stage 1
+gate FIRST, observes a clean exact Git HEAD, checks that the original START
+commit is an ancestor of the current HEAD, derives all changed file paths,
+identifies changes outside R01's parser write surface, and produces a versioned
+source-bound plan-comparison record.
+
+The predecessor plan is a JSON object with approach[], pending[],
+source_claims[], and next_action. The Runner reconciliation decisions object
+must contain agreements[], agent1_stronger[], runner_stronger[], unresolved[],
+high_roi_in_scope[], medium_roi_parked[], next_action, and owner_scope_change
+(NONE or OWNER_DECISION_REQUIRED). Each decision entry is a finding/why/
+evidence_refs record; refs are still agent-supplied, not independently qualified.
+
+Run the reconciler FROM A TRUSTED TOOL INSTALLATION OUTSIDE the source checkout:
+
+    python /trusted-tools/experiments/buddy_runner_v1/stage2_reconcile.py \
+      --snapshot /isolated/run-001 \
+      --receipt /recorder-only/run-001.plan.json \
+      --gate /recorder-only/run-001.gate.json \
+      --repo /checkout/Agent1-current-R01 \
+      --head VERIFIED_CURRENT_40_HEX_SHA \
+      --incumbent-plan /recorder-only/incumbent.json \
+      --decisions /recorder-only/runner-comparison.json \
+      --report /recorder-only/read-only-stage2.json
+
+This stage rejects a stale candidate HEAD, dirty/untracked working files,
+missing/tampered Stage 1 gate, an unrelated or non-descendant source, an
+unsealed output target, and malformed/non-evidenced plan-disagreement records.
+It does NOT validate PR/CI via GitHub, execute tests, authenticate the original
+Owner message, publish to an issue, or promote the Runner to a writer.
+
+The report ALWAYS states execution_authority: NOT_GRANTED and
+writer_transfer: NOT_ATTEMPTED. Verification/Owner authority must come through
+a distinct externally verified admission protocol. A suggestion about medium
+ROI remains parked and cannot silently change released graph scope.
+
 ## Boundaries and unproven requirements
 
 No current source, PR statistics, Agent 1 HOW, final plan, current CI or future
