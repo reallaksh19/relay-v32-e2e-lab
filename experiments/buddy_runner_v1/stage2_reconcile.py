@@ -14,6 +14,7 @@ import subprocess
 
 from runner_protocol import verify_gate
 from runner_stage1 import Stage1Error, _exclusive_json, digest
+from recorder_custody import validate_disclosure, secret_from_env
 
 _SHA = re.compile(r"^[a-f0-9]{40}$")
 _ALLOWED_R01_WRITE = frozenset({"src/csv_auditor/parser.py"})
@@ -92,7 +93,7 @@ def observe_current_source(repo: str | Path, initial_commit: str, expected_head:
 def reconcile(snapshot_dir: str | Path, plan_receipt_path: str | Path,
               stage1_gate_path: str | Path, repo: str | Path,
               expected_head: str, incumbent_plan: dict, decisions: dict,
-              report_path: str | Path) -> dict:
+              report_path: str | Path, *, custody_observation: dict | None = None) -> dict:
     gate = verify_gate(snapshot_dir, plan_receipt_path, stage1_gate_path)
     plan_receipt = json.loads(Path(plan_receipt_path).read_text(encoding="utf-8"))
     _check_incumbent_plan(incumbent_plan)
@@ -125,6 +126,8 @@ def reconcile(snapshot_dir: str | Path, plan_receipt_path: str | Path,
         "execution_authority": "NOT_GRANTED",
         "writer_transfer": "NOT_ATTEMPTED",
         "github_issue_update": "NOT_ATTEMPTED",
+        "custody_observation": custody_observation or
+            {"state": "UNATTESTED_LOCAL_LIBRARY_CALL", "execution_authority": "NOT_GRANTED"},
         "state": "READ_ONLY_RECONCILIATION_REQUIRES_EXTERNAL_ADMISSION",
     }
     _exclusive_json(report_path, output)
@@ -136,12 +139,29 @@ def main() -> None:
     for key in ("snapshot", "receipt", "gate", "repo", "head", "incumbent-plan",
                 "decisions", "report"):
         ap.add_argument("--" + key, required=True)
+    ap.add_argument("--custody-journal", required=True)
+    ap.add_argument("--disclosure", required=True)
+    ap.add_argument("--external-anchor", required=True)
     ns = ap.parse_args()
     try:
+        incumbent = json.loads(Path(ns.incumbent_plan).read_text(encoding="utf-8"))
+        decisions = json.loads(Path(ns.decisions).read_text(encoding="utf-8"))
+        disclosure = json.loads(Path(ns.disclosure).read_text(encoding="utf-8"))
+        if (disclosure.get("candidate_sha") != ns.head or
+                disclosure.get("incumbent_plan_digest") != digest(incumbent)):
+            raise Stage1Error("STAGE2_CUSTODY_DISCLOSURE_BASIS_MISMATCH")
+        custody = validate_disclosure(ns.custody_journal, secret_from_env(),
+                                      ns.snapshot, ns.receipt, ns.gate,
+                                      disclosure, external_anchor=ns.external_anchor)
         result = reconcile(ns.snapshot, ns.receipt, ns.gate, ns.repo, ns.head,
-                           json.loads(Path(ns.incumbent_plan).read_text(encoding="utf-8")),
-                           json.loads(Path(ns.decisions).read_text(encoding="utf-8")),
-                           ns.report)
+                           incumbent, decisions, ns.report,
+                           custody_observation={
+                               "state": "LOCAL_RECORDER_EVENT_CHAIN_VERIFIED",
+                               "journal_event_count": custody["events"],
+                               "externally_supplied_anchor_checked": custody["external_anchor_checked"],
+                               "temporal_independence": "NOT_AUTHENTICATED_BY_THIS_CLIENT",
+                               "execution_authority": "NOT_GRANTED",
+                           })
     except (Stage1Error, OSError, ValueError, subprocess.TimeoutExpired) as exc:
         ap.exit(2, "STAGE2_FAIL_CLOSED: " + str(exc) + "\n")
     print(json.dumps({"result": "READ_ONLY", "schema": result["schema"],
