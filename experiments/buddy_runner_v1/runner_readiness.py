@@ -42,6 +42,17 @@ def _digest(value):
     return "sha256:" + hashlib.sha256(_canonical(value).encode("utf-8")).hexdigest()
 
 
+def strict_json_loads(raw):
+    def no_duplicate_keys(pairs):
+        output = {}
+        for key, val in pairs:
+            if key in output:
+                raise ReadinessError("DUPLICATE_JSON_KEY:" + key)
+            output[key] = val
+        return output
+    return json.loads(raw, object_pairs_hook=no_duplicate_keys)
+
+
 def _nonnegative_or_none(value, field):
     if value is not None and (type(value) is not int or value < 0):
         raise ReadinessError("INVALID_" + field.upper())
@@ -51,19 +62,19 @@ def assess(observation):
     """Conservative, source-labelled advisory. Never claims independent telemetry."""
     if type(observation) is not dict or set(observation) != TOP_KEYS:
         raise ReadinessError("READINESS_INPUT_SCHEMA_MISMATCH")
-    if not RUN.fullmatch(observation["run_id"] or ""):
+    if type(observation["run_id"]) is not str or not RUN.fullmatch(observation["run_id"]):
         raise ReadinessError("INVALID_RUN_ID")
-    if not REF.fullmatch(observation["responsibility"] or ""):
+    if type(observation["responsibility"]) is not str or not REF.fullmatch(observation["responsibility"]):
         raise ReadinessError("INVALID_RESPONSIBILITY")
-    if not SHA.fullmatch(observation["candidate_sha"] or ""):
+    if type(observation["candidate_sha"]) is not str or not SHA.fullmatch(observation["candidate_sha"]):
         raise ReadinessError("INVALID_CANDIDATE_SHA")
-    if observation["source_kind"] not in SOURCE_KINDS:
+    if type(observation["source_kind"]) is not str or observation["source_kind"] not in SOURCE_KINDS:
         raise ReadinessError("INVALID_SOURCE_KIND")
-    if observation["confidence"] not in CONFIDENCE:
+    if type(observation["confidence"]) is not str or observation["confidence"] not in CONFIDENCE:
         raise ReadinessError("INVALID_CONFIDENCE")
-    if observation["cognitive_warning"] not in WARNINGS:
+    if type(observation["cognitive_warning"]) is not str or observation["cognitive_warning"] not in WARNINGS:
         raise ReadinessError("INVALID_COGNITIVE_WARNING")
-    if observation["interruption_risk"] not in INTERRUPTION_RISKS:
+    if type(observation["interruption_risk"]) is not str or observation["interruption_risk"] not in INTERRUPTION_RISKS:
         raise ReadinessError("INVALID_INTERRUPTION_RISK")
     if type(observation["agent_requests_runner"]) is not bool:
         raise ReadinessError("INVALID_AGENT_REQUEST")
@@ -122,6 +133,8 @@ def assess(observation):
 
 
 def render_task_evidence(assessment):
+    if type(assessment) is not dict:
+        raise ReadinessError("READINESS_RECORD_SCHEMA_INVALID")
     verified = assess(assessment.get("observation"))
     if verified != assessment:
         raise ReadinessError("READINESS_DECISION_TAMPERED")
@@ -139,7 +152,7 @@ def parse_task_evidence(text):
     if not match:
         raise ReadinessError("RUNNER_BLOCK_MISSING_OR_AMBIGUOUS")
     try:
-        payload = json.loads(match.group(2))
+        payload = strict_json_loads(match.group(2))
     except json.JSONDecodeError as exc:
         raise ReadinessError("RUNNER_BLOCK_NOT_JSON") from exc
     if type(payload) is not dict or set(payload) != {"RUNNER_READINESS_V1"}:
@@ -163,7 +176,7 @@ def main():
     args = parser.parse_args()
     try:
         if args.command == "render":
-            record = assess(json.loads(Path(args.observation).read_text(encoding="utf-8")))
+            record = assess(strict_json_loads(Path(args.observation).read_text(encoding="utf-8")))
             target = Path(args.output)
             if target.exists():
                 raise ReadinessError("OUTPUT_ALREADY_EXISTS")
