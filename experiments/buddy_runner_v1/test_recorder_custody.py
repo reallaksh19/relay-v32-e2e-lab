@@ -104,6 +104,13 @@ class CustodyTests(unittest.TestCase):
         with self.assertRaisesRegex(Stage1Error, "EXTERNAL_ANCHOR_MISMATCH"):
             verify_journal(self.journal, KEY, anchor=sealed["mac"])
 
+    def test_noncanonical_log_bytes_rejected(self):
+        original = self.journal.read_text()
+        row = json.loads(original)
+        self.journal.write_text(json.dumps(row, separators=(",", ": "), sort_keys=True) + "\n")
+        with self.assertRaisesRegex(Stage1Error, "RECORDER_NONCANONICAL_LINE"):
+            verify_journal(self.journal, KEY)
+
     def test_wrong_recorder_key_detected(self):
         with self.assertRaisesRegex(Stage1Error, "RECORDER_MAC_INVALID"):
             verify_journal(self.journal, bytes.fromhex("a1" * 32))
