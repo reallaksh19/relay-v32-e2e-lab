@@ -1,0 +1,81 @@
+name: V3.2 native GET-only issue materialization and title drift
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/native_material_status_probe.py'
+      - 'tests/test_native_material_status_probe.py'
+      - '.github/workflows/v32-native-material-state-readonly.yml'
+      - 'governance/released-graph.json'
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+jobs:
+  native-material-status:
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact lab event source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Guard the source and read-only behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -m unittest discover -s tests -p test_native_material_status_probe.py -v
+      - name: Checkout trusted immutable Common V3.2 source
+        uses: actions/checkout@v4
+        with:
+          repository: reallaksh19/Common
+          ref: 13989969f6b7e432c4f7c1ddfe975449dba53593
+          token: ${{ secrets.COMMON_READ_TOKEN }}
+          path: .protocol/common
+          persist-credentials: false
+      - name: Real native graph → provider material → issue title readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .protocol/common rev-parse HEAD)" = 13989969f6b7e432c4f7c1ddfe975449dba53593
+          python -m pip install --disable-pip-version-check PyYAML
+          python scripts/native_material_status_probe.py \
+            --graph governance/released-graph.json \
+            --engine .protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py \
+            --expected-main-sha "$GITHUB_SHA" \
+            --output "$RUNNER_TEMP/native-material-status.json"
+          python - "$RUNNER_TEMP/native-material-status.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding="utf-8"))
+          assert r["source_main_sha"] == '${{ github.sha }}',r
+          assert r["pinned_common_engine_commit"] == "13989969f6b7e432c4f7c1ddfe975449dba53593"
+          assert r["outcome"] == "GET_ONLY_NATIVE_PROJECTION_READBACK"
+          assert not r["facts_created"] and not r["issue_titles_written"] and not r["pr_titles_written"]
+          assert not r["semantic_progress_awarded_by_this_tool"]
+          assert len(r["nodes"]) == 6
+          assert {n["kind"] for n in r["nodes"]} == {"ROOT","INTERMEDIATE","LEAF"}
+          print("NATIVE_READBACK_OK; DRIFT_COUNT=",r["title_drift_count"])
+          print("This does not accept facts, publish titles or qualify C6.")
+          PY
+      - name: Archive exact-source native report
+        uses: actions/upload-artifact@v4
+        with:
+          name: v32-native-material-status-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 30
+          path: ${{ runner.temp }}/native-material-status.json
+      - name: Do not mistake observation for authorization
+        if: always()
+        run: |
+          echo 'GET ONLY: no CHECKPOINT_FACTS created, no issue/PR titles written.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Any expected UNMATERIALIZED titles are a source-derived reporting issue, not an earned P/E/D.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Hosted execution and independent log/artifact custody must be proven before accepting results.' >> "$GITHUB_STEP_SUMMARY"
