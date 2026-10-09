@@ -1,6 +1,12 @@
 name: V3.2 lab read-only source projection
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'governance/**'
+      - 'scripts/**'
+      - '.github/workflows/delp-readonly.yml'
 permissions:
   contents: read
   issues: read
