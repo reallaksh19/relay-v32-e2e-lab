@@ -1,0 +1,18 @@
+{
+  "repository": "reallaksh19/relay-v32-e2e-lab",
+  "issues": {
+    "ROOT": 1,
+    "PHASE_CORE": 2,
+    "PHASE_DELIVERY": 3,
+    "R01": 4,
+    "R02": 5,
+    "R03": 6
+  },
+  "original_proposal_commit": "975433cf557f7f6de0f015c83f5e92cd119a0e51",
+  "proposal_digest": "sha256:b153846fbb2f189ac255e3677072d35a3f591e8402199bb14eddf8b653c58ad8",
+  "binding_type": "EXPERIMENTAL_OWNER_DIRECTED_T05_WAIVER",
+  "release_authority_verified": false,
+  "approval_comment_valid": false,
+  "t05": "WAIVED_NOT_PASSED",
+  "t06": "PENDING_NATIVE_SOURCE_VERIFICATION"
+}
