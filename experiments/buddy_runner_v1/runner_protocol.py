@@ -7,6 +7,8 @@ Filesystem O_EXCL is not a signed immutable timestamp.
 import argparse
 import json
 from pathlib import Path
+import re
+from runner_readiness import parse_task_evidence
 from runner_stage1 import (
     Stage1Error, _exclusive_json, capture_start, digest,
     packet_check, seal_plan, validate_snapshot, verify_seal,
@@ -16,14 +18,27 @@ ACTIVATION = "v32-buddy-runner-activation-v1"
 GATE = "v32-buddy-sealed-stage1-gate-v1"
 
 
-def activate(snapshot_dir, packet):
-    """Only called at TIME_FOR_RUNNER; absolutely no live repo reads."""
+def activate(snapshot_dir, packet, readiness_evidence=None):
+    """At ~70% release only a WHAT/WHY packet, never a live source or PR."""
     source = validate_snapshot(snapshot_dir)
     packet_check(packet)
+    evidence_digest = None
+    if readiness_evidence is not None:
+        parsed = parse_task_evidence(readiness_evidence)
+        observed = parsed["observation"]
+        responsibility = source["origin"]["repo"] + "#" + str(source["origin"]["issue"])
+        if observed["run_id"] != source["run_id"] or observed["responsibility"] != responsibility:
+            raise Stage1Error("RUNNER_SIGNAL_IDENTITY_MISMATCH")
+        if not parsed["advisory"]["time_for_runner"]:
+            raise Stage1Error("RUNNER_SIGNAL_NOT_REQUESTED")
+        # Opaque reference only: the Runner sees neither current SHA nor tokens.
+        evidence_digest = digest(readiness_evidence)
     activation = {
         "schema": ACTIVATION, "run_id": source["run_id"],
         "start_manifest_digest": digest(source),
-        "time_for_runner": "AGENT_SIGNAL_UNVERIFIED",
+        "time_for_runner": ("TASK_EVIDENCE_PARSED_UNAUTHENTICATED" if evidence_digest
+                            else "AGENT_SIGNAL_UNVERIFIED"),
+        "readiness_evidence_digest": evidence_digest,
         "issue_state": "FROZEN_START_ONLY",
         "incumbent_what_why_at_activation": packet,
         "runner_authority": "READ_ONLY",
@@ -40,7 +55,13 @@ def verify_activation(snapshot_dir):
         raise Stage1Error("ACTIVATION_REQUIRED_BEFORE_PLAN") from exc
     if (activation.get("schema") != ACTIVATION or activation.get("run_id") != source["run_id"]
             or activation.get("start_manifest_digest") != digest(source)
-            or activation.get("time_for_runner") != "AGENT_SIGNAL_UNVERIFIED"
+            or activation.get("time_for_runner") not in {
+                "AGENT_SIGNAL_UNVERIFIED", "TASK_EVIDENCE_PARSED_UNAUTHENTICATED"}
+            or activation.get("readiness_evidence_digest") is not None
+               and (not isinstance(activation["readiness_evidence_digest"], str)
+                    or not re.fullmatch(r"sha256:[a-f0-9]{64}", activation["readiness_evidence_digest"]))
+            or ((activation.get("time_for_runner") == "AGENT_SIGNAL_UNVERIFIED")
+                != (activation.get("readiness_evidence_digest") is None))
             or activation.get("issue_state") != "FROZEN_START_ONLY"
             or activation.get("runner_authority") != "READ_ONLY"):
         raise Stage1Error("ACTIVATION_SOURCE_MISMATCH")
@@ -87,7 +108,7 @@ def main():
     for name in ("repo", "snapshot", "run", "start-sha", "initial-packet"):
         start.add_argument("--" + name, required=True)
     activation = sub.add_parser("activate")
-    for name in ("snapshot", "packet"):
+    for name in ("snapshot", "packet", "evidence"):
         activation.add_argument("--" + name, required=True)
     seal = sub.add_parser("seal")
     for name in ("snapshot", "receipt", "gate", "plan"):
@@ -102,7 +123,8 @@ def main():
                                    expected_sha=getattr(args, "start_sha"),
                                    packet=json.loads(Path(args.initial_packet).read_text()))
         elif args.cmd == "activate":
-            result = activate(args.snapshot, json.loads(Path(args.packet).read_text()))
+            result = activate(args.snapshot, json.loads(Path(args.packet).read_text()),
+                              readiness_evidence=Path(args.evidence).read_text(encoding="utf-8"))
         elif args.cmd == "seal":
             result = seal_activated_plan(args.snapshot, args.receipt, args.gate,
                                          json.loads(Path(args.plan).read_text()))
