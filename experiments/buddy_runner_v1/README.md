@@ -37,7 +37,8 @@ recorder's implementation into the original source tree just to run capture.
 After Agent 1 continues coding and signals TIME_FOR_RUNNER:
 
     python /trusted-tools/experiments/buddy_runner_v1/runner_protocol.py activate \
-      --snapshot /isolated/run-001 --packet /recorder/late-what-why.json
+      --snapshot /isolated/run-001 --packet /recorder/late-what-why.json \
+      --evidence /recorder/agent-task-evidence.md
 
 Once Runner authors its INDEPENDENT plan, recorder-owned sealing:
 
@@ -60,6 +61,46 @@ runner_protocol.py activation and bound gate, not a bare plan receipt.
 
     python -m unittest discover -s experiments/buddy_runner_v1 -p 'test_*.py' -v
 
+
+## BR-05 — Advisory TIME_FOR_RUNNER and Stage 1 trigger binding
+
+This experimental module is an additional ORDINARY TASK_EVIDENCE / CHECKPOINT
+payload, not a fifth engineering publication family. Its JSON block is
+RUNNER_READINESS_V1, explicitly separate from CHECKPOINT_FACTS_V1.
+It never authors DELP P/E/D, issue title, execution permission or writer
+transfer.
+
+Generate the advisory from a source-labelled observation (may be UNKNOWN):
+
+    python /trusted-tools/experiments/buddy_runner_v1/runner_readiness.py render \
+      --observation /recorder/runner-observation.json \
+      --output /recorder/agent-task-evidence.md
+
+Validate it before treating it as the Agent 1 Runner request:
+
+    python /trusted-tools/experiments/buddy_runner_v1/runner_readiness.py verify \
+      --evidence /recorder/agent-task-evidence.md
+
+Example input fixture: fixtures/readiness_70_percent_synthetic.json. It uses
+AGENT_SELF_ESTIMATE/LOW confidence and **does not invent context-token telemetry
+or an actual Agent 1 execution**. A trusted external agent/session recorder
+must separately anchor the identity of the comment author, provider content,
+candidate and actual observation time. The local generator only makes a
+syntactically valid *publishable proposal*; it DOES NOT POST to GitHub.
+
+The production CLI for runner_protocol activate now requires --evidence.
+It parses the TASK_EVIDENCE record, requires REQUEST_RUNNER or URGENT_RUNNER,
+and binds run_id/responsibility to the original pinned START manifest. It
+adds only an opaque evidence digest to the Stage 1 activation; the Runner
+does not see current candidate HEAD or context-token measurements. Legacy
+Python-function activation without evidence is marked AGENT_SIGNAL_UNVERIFIED
+and must never count as independently proven readiness.
+
+Calibration is tentative: at 60% PREPARE, approximately 70% REQUEST,
+approximately 85% URGENT. A severe warning, imminent interruption, or next
+unit consuming remaining reliable runway triggers earlier. Missing telemetry
+is UNKNOWN, not HEALTHY. Provider-reported values are still untrusted when
+merely supplied by an agent; source_trust remains explicitly unverified.
 
 ## Stage 2 read-only reconciliation (BR-04, experimental)
 
