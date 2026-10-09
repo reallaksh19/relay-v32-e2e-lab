@@ -29,35 +29,35 @@
           "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
           "observed_by": "synthetic_fixture_only",
-          "result": "UNKNOWN"
+          "result": "NOT_APPLICABLE"
         },
         {
           "name": "RUNNER_PLAN_SEALED",
           "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
           "observed_by": "synthetic_fixture_only",
-          "result": "UNKNOWN"
+          "result": "NOT_APPLICABLE"
         },
         {
           "name": "WITNESS_PROVIDER_READBACK",
           "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
           "observed_by": "synthetic_fixture_only",
-          "result": "UNKNOWN"
+          "result": "NOT_APPLICABLE"
         },
         {
           "name": "AGENT1_INTERRUPTED",
           "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
           "observed_by": "synthetic_fixture_only",
-          "result": "UNKNOWN"
+          "result": "NOT_APPLICABLE"
         },
         {
           "name": "STAGE2_SOURCE_RECONCILED",
           "artifact_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
           "provider_ref": "NOT_AVAILABLE_SYNTHETIC",
           "observed_by": "synthetic_fixture_only",
-          "result": "UNKNOWN"
+          "result": "NOT_APPLICABLE"
         },
         {
           "name": "GOLDEN_ORACLE",
@@ -82,7 +82,9 @@
         "runner_cost_microusd": null,
         "reviewer_cost_microusd": null,
         "recovery_seconds": null
-      }
+      },
+      "trigger_percent": null,
+      "trigger_source_kind": "NONE"
     },
     {
       "mode": "EARLY_50",
@@ -161,7 +163,9 @@
         "runner_cost_microusd": null,
         "reviewer_cost_microusd": null,
         "recovery_seconds": null
-      }
+      },
+      "trigger_percent": 50,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
     },
     {
       "mode": "TARGET_70",
@@ -240,7 +244,9 @@
         "runner_cost_microusd": null,
         "reviewer_cost_microusd": null,
         "recovery_seconds": null
-      }
+      },
+      "trigger_percent": 70,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
     },
     {
       "mode": "LATE_85",
@@ -319,7 +325,9 @@
         "runner_cost_microusd": null,
         "reviewer_cost_microusd": null,
         "recovery_seconds": null
-      }
+      },
+      "trigger_percent": 85,
+      "trigger_source_kind": "AGENT_SELF_ESTIMATE"
     }
   ]
 }
