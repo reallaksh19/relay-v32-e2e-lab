@@ -1,0 +1,14 @@
+{
+  "schema": "lab-v32-committed-acceptance-manifest-v1",
+  "repository": "reallaksh19/relay-v32-e2e-lab",
+  "base_main_sha": "73ffc780f4dfbd9de9010bbe71524f6f6de72765",
+  "blobs": {
+    "src/csv_auditor/__init__.py": "4df8d75594a1d46d9667a582b439bf8a49e9e0f5",
+    "src/csv_auditor/parser.py": "cf258bb24a566dfc3ccfaccb907c57d97d91ae0f",
+    "src/csv_auditor/compare.py": "bc44df4c91e4f0a8f917b67e6f4b985e57088a1f",
+    "src/csv_auditor/cli.py": "c49761c1053fafa433b3e28fef3dc5f16d3cdf1b",
+    "acceptance/test_r01_input.py": "6dbdebae9f151f55984a76c2a238d0db7d17b2e2",
+    "acceptance/test_r02_compare.py": "994e8b87a85e55b49f9cf7cac1740e510a0ec464",
+    "acceptance/test_r03_cli.py": "31cfa51e47f670dcbb4fda18fa7292a74e3f7062"
+  }
+}
