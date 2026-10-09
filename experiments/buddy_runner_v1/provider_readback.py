@@ -23,13 +23,13 @@ def _iso(value):
 
 def _comment(item,repo,number,actor):
     _require(type(item) is dict, 'GITHUB_COMMENT_INVALID')
-    allowed=('id','html_url','user','body','created_at','updated_at')
+    allowed=('id','user','body','created_at','updated_at')
     _require(all(k in item for k in allowed), 'GITHUB_COMMENT_METADATA_MISSING')
     _require(type(item['id']) is int and item['id'] > 0 and
              type(item['user']) is dict and type(item['user'].get('login')) is str and
              item['user']['login'].casefold()==actor.casefold(), 'GITHUB_COMMENT_AUTHOR_MISMATCH')
     _require(type(item['body']) is str and len(item['body']) <= 12000, 'GITHUB_COMMENT_BODY_INVALID')
-    url=item['html_url']
+    url=item.get('html_url', item.get('url'))
     _require(type(url) is str and url ==
              f'https://github.com/{repo}/issues/{number}#issuecomment-{item["id"]}',
              'GITHUB_COMMENT_ORIGIN_MISMATCH')
