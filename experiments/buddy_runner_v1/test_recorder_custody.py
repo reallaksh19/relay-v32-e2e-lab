@@ -194,6 +194,17 @@ class CustodyTests(unittest.TestCase):
         witness_file = self.root / "recorder" / "witness.json"
         witness_file.write_bytes(canonical({**body, "signature_b64":
             base64.b64encode(private.sign(canonical(body))).decode()}))
+        witness_comment_file = self.root / "recorder" / "witness-comment.json"
+        disclosure_comment_file = self.root / "recorder" / "disclosure-comment.json"
+        repo = "reallaksh19/relay-v32-e2e-lab"
+        def comment(i, actor, at, body):
+            return {"id": i, "user": {"login": actor},
+                    "html_url": f"https://github.com/{repo}/issues/7#issuecomment-{i}",
+                    "created_at": at, "updated_at": at, "body": body}
+        witness_comment_file.write_text(json.dumps(comment(701, "external-witness",
+                 "2026-10-09T12:50:01Z", "BUDDY_WITNESS_RECEIPT_V1\n" + witness_file.read_text())))
+        disclosure_comment_file.write_text(json.dumps(comment(702, "agent-one",
+                 "2026-10-09T12:50:02Z", "BUDDY_STAGE2_DISCLOSED_V1\nRUN-1\n" + journal_rows[2]["mac"])))
         env = {**os.environ, "BUDDY_RECORDER_KEY_HEX": KEY.hex()}
         result = subprocess.run([
             sys.executable, str(Path(__file__).with_name("stage2_reconcile.py")),
@@ -206,6 +217,11 @@ class CustodyTests(unittest.TestCase):
             "--witness-public-key", str(keyfile),
             "--witness-key-fingerprint", fingerprint,
             "--witness-id", "synthetic-test-witness",
+            "--provider-witness-comment", str(witness_comment_file),
+            "--provider-disclosure-comment", str(disclosure_comment_file),
+            "--provider-repo", repo, "--provider-issue", "7",
+            "--provider-witness-author", "external-witness",
+            "--provider-agent-author", "agent-one",
         ], env=env, capture_output=True, text=True)
         return result, report
 
