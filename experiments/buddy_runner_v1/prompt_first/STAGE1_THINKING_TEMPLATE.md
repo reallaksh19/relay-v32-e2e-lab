@@ -23,9 +23,12 @@ You may only inspect the permitted original sources, ask constrained WHAT/WHY qu
 | Authentic fixture inputs | [[paths, byte sizes, hashes, positive-pair status, missing originals]] |
 | Plan and dependencies | [[historical released claim and nearby owned responsibilities]] |
 | Agent A limited WHAT/WHY | [[WHAT problem; WHY it matters, pending, known risks, parked; no solutions]] |
+| Runner trigger provenance | [[Owner requested preparation / Agent A advisory; PROVIDER_REPORTED, CALIBRATED_EPISODE, AGENT_SELF_ESTIMATE, or UNAVAILABLE; coarse band or UNKNOWN; never current A PR/head/CI]] |
 | Unknowns/redactions | [[original chat, telemetry, fixture pairing, unexamined constraints]] |
 | Three static challenges | [[Q1 original code authority, Q2 consumer invariants, Q3 falsifiable real acceptance]] |
 | Allowed response destination | [[one plan-only artifact or DRAFT_ONLY]] |
+
+**Readiness is a Stage 1 admission fact, not a source of engineering answers.** The Owner's “Prepare for runner” instructs Agent A to prepare static input immediately. Agent A may proactively suggest “Time for Runner” near roughly 70% estimated usable life consumed or earlier for credible reliability risk, but B receives only the coarse trigger reason/provenance. Never infer actual token counts, implementation progress, source HEAD, PR status or permission transfer from that suggestion. The underlying detailed readiness checkpoint remains Agent A/controller-side until Stage 2.
 
 Allowed sources are **only** those in the card and their approved immutable references. A modern URL is a provenance locator, not permission to read its mutable current contents.
 
