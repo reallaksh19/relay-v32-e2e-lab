@@ -102,6 +102,84 @@ unit consuming remaining reliable runway triggers earlier. Missing telemetry
 is UNKNOWN, not HEALTHY. Provider-reported values are still untrusted when
 merely supplied by an agent; source_trust remains explicitly unverified.
 
+## BR-07 — Detached external witness + fail-closed Runner launch
+
+Two security boundaries have now been added to the experimental helpers.
+
+**1. Detached witness — witness_anchor.py**
+
+The Stage 2 CLI requires a versioned Ed25519-signed PLAN_SEALED witness
+receipt. The verifier checks the witness's exact public key against an
+independently pinned SHA-256 fingerprint, validates the detached signature,
+matches the signing event to the MAC-verified recorder journal's third
+event (PLAN_SEALED), and binds original source manifest + plan receipt
++ sealed Stage 1 gate digests. Modified/replayed run IDs, changed plans,
+wrong keys, noncanonical/duplicate JSON keys, missing/wrong signatures,
+and invalid stage ordering fail closed.
+
+The witness MUST be a truly independent signer, with private key and
+publication custody inaccessible to Agent 1, Runner and the application
+recorder. **No production signing endpoint, key, provider callback,
+timestamp authority or external witness receipt has been configured.**
+Tests generate temporary Ed25519 keys, *not* real external attestation.
+A signature validates only signer/key/basis; it does not prove an
+immutable provider posting, authentic UTC timestamp, receipt creation
+before disclosure, or organizational independence. All of those still
+require independent provider-side evidence.
+
+Additional REQUIRED Stage2 CLI inputs (in addition to BR-06 parameters):
+
+    --witness-receipt /trusted-readback/runner-seal.witness.json
+    --witness-public-key /trusted-config/witness-ed25519-public.raw
+    --witness-key-fingerprint sha256:PINNED_SHA256_OF_32_PUBLIC_KEY_BYTES
+    --witness-id OWNER_AUTHORIZED_INDEPENDENT_WITNESS
+
+The receipt must be independently retrieved from the witness's provider;
+copying it from Agent 1's checkout or a self-authored packet is not
+proven custody. The local verifier always reports provider_readback:
+NOT_VERIFIED_BY_THIS_MODULE and execution_authority: NOT_GRANTED.
+
+Python dependency: cryptography==46.0.4, pinned for CI.
+
+**2. Runner launch — isolated_runner.py**
+
+The prototype constructs a fixed, no-shell Docker invocation whose image
+must be digest-pinned and equal to an independently controlled approved
+image string. Only the four allowlisted original source files, original
+manifest and later sanitized activation are mounted at /blind READ ONLY.
+The empty Runner output directory is separately mounted at /output.
+Docker network is NONE, image is read-only, Linux caps are dropped,
+no-new-privileges applied, memory/process limits fixed, and host
+environment restricted. No host Git checkout, home directory, GitHub
+credential, recorder key, PR statistics, Stage2 source or future issue
+comments may be mounted. Extra files and symlinks in the blind source
+bundle cause immediate rejection.
+
+    python /trusted-tools/experiments/buddy_runner_v1/isolated_runner.py \
+      --snapshot /isolated/run-001 \
+      --output /runner-output/empty-run-001 \
+      --image OWNER_REVIEWED_RUNNER_IMAGE@sha256:EXACT_64_HEX_DIGEST \
+      --approved-image OWNER_REVIEWED_RUNNER_IMAGE@sha256:EXACT_64_HEX_DIGEST
+
+The CLI's equality check is a local protection, not proof of Owner image
+authorization: the approved digest must come from independently secured
+configuration. No container image/Runner intelligence has been supplied
+or executed in this experimental PR. Docker is absent on the testing
+host; Linux unshare -n is denied; launch therefore fails closed
+with ISOLATED_RUNTIME_UNAVAILABLE_NO_FALLBACK.
+
+An actual isolated Runner host must independently prove its Docker daemon
+configuration, image provenance, mount confinement, credential isolation,
+network denial and runtime logs; a simulated subprocess/unit test is not a
+qualification of a live LLM Runner. This module NEVER promotes Runner,
+creates a new R01 responsibility, or publishes accepted TaskEvidence.
+
+**Verification:** 64/64 focused local tests PASS with temporary Git repos
+and synthetic witness keys; 13 witness and 11 isolation cases extend the
+previous 40. No real external witness service, runtime isolation execution,
+live Agent1→Runner continuity, or Chromium/browser exercise is claimed.
+Hosted CI remains blocked by jobs failing without visible steps.
+
 ## BR-06 — Recorder-keyed event ordering (experiment only)
 
 The trusted recorder must hold an independent random 32-byte-or-longer secret
@@ -200,7 +278,11 @@ Run the reconciler FROM A TRUSTED TOOL INSTALLATION OUTSIDE the source checkout:
       --report /recorder-only/read-only-stage2.json \
       --custody-journal /recorder-only/run-001.jsonl \
       --disclosure /recorder-only/run-001.disclosure.json \
-      --external-anchor EXTERNALLY_RETAINED_LAST_MAC
+      --external-anchor EXTERNALLY_RETAINED_LAST_MAC \
+      --witness-receipt /trusted-readback/runner-seal.witness.json \
+      --witness-public-key /trusted-config/witness-ed25519-public.raw \
+      --witness-key-fingerprint sha256:TRUSTED_64_HEX_DIGEST \
+      --witness-id INDEPENDENT_WITNESS
 
 This stage rejects a stale candidate HEAD, dirty/untracked working files,
 missing/tampered Stage 1 gate, an unrelated or non-descendant source, an
