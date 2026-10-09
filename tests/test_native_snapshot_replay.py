@@ -17,7 +17,7 @@ REPO=mod.REPO
 def inputs():
     # Test the real approved release bytes, not a plausible six-node mock.
     # The new source-custody gate requires exact historical graph identity.
-    raw=(SOURCE.parents[0] / 'governance' / 'released-graph.json').read_bytes()
+    raw=(SOURCE.parents[1] / 'governance' / 'released-graph.json').read_bytes()
     graph=json.loads(raw)
     assert mod.git_blob(raw)==mod.RELEASED_GRAPH_BLOB
     pulls={}
