@@ -16,6 +16,7 @@ from runner_protocol import verify_gate
 from runner_stage1 import Stage1Error, _exclusive_json, digest
 from recorder_custody import validate_disclosure, secret_from_env
 from witness_anchor import verify_witness
+from provider_readback import verify_provider_snapshot
 
 _SHA = re.compile(r"^[a-f0-9]{40}$")
 _ALLOWED_R01_WRITE = frozenset({"src/csv_auditor/parser.py"})
@@ -146,6 +147,12 @@ def main() -> None:
     ap.add_argument("--witness-public-key", required=True)
     ap.add_argument("--witness-key-fingerprint", required=True)
     ap.add_argument("--witness-id", required=True)
+    ap.add_argument("--provider-witness-comment", required=True)
+    ap.add_argument("--provider-disclosure-comment", required=True)
+    ap.add_argument("--provider-repo", required=True)
+    ap.add_argument("--provider-issue", type=int, required=True)
+    ap.add_argument("--provider-witness-author", required=True)
+    ap.add_argument("--provider-agent-author", required=True)
     ap.add_argument("--external-anchor", required=True)
     ns = ap.parse_args()
     try:
@@ -166,9 +173,18 @@ def main() -> None:
                                  snapshot=Path(ns.snapshot), plan_receipt=Path(ns.receipt),
                                  gate=Path(ns.gate), expected_witness_id=ns.witness_id,
                                  expected_last_mac=ns.external_anchor)
+        provider = verify_provider_snapshot(
+                json.loads(Path(ns.provider_witness_comment).read_text(encoding="utf-8")),
+                json.loads(Path(ns.provider_disclosure_comment).read_text(encoding="utf-8")),
+                Path(ns.witness_receipt).read_bytes(),
+                expected_repo=ns.provider_repo, expected_issue=ns.provider_issue,
+                expected_witness_author=ns.provider_witness_author,
+                expected_agent_author=ns.provider_agent_author,
+                expected_witness_id=ns.witness_id)
         result = reconcile(ns.snapshot, ns.receipt, ns.gate, ns.repo, ns.head,
                            incumbent, decisions, ns.report,
                            custody_observation={
+                               "provider_readback": provider,
                                "independent_witness": witness,
                                "state": "LOCAL_RECORDER_EVENT_CHAIN_VERIFIED",
                                "journal_event_count": custody["events"],
