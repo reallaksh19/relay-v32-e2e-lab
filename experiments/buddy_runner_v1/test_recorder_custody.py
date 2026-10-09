@@ -8,7 +8,7 @@ from pathlib import Path
 import unittest
 
 import test_runner_stage1 as seed
-from runner_stage1 import Stage1Error, capture_start
+from runner_stage1 import Stage1Error, capture_start, digest
 from runner_protocol import activate, seal_activated_plan
 from runner_readiness import assess, render_task_evidence
 from recorder_custody import append, verify_events, verify_journal, validate_disclosure
