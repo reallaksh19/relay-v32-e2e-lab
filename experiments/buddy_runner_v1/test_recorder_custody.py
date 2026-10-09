@@ -1,6 +1,10 @@
 """BR-06 ordered recorder tests: replay, forged, rollback, cross-run controls."""
 from __future__ import annotations
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
 import unittest
 
 import test_runner_stage1 as seed
@@ -149,6 +153,55 @@ class CustodyTests(unittest.TestCase):
         self.journal.write_bytes(self.journal.read_bytes()[:-1])
         with self.assertRaisesRegex(Stage1Error, "RECORDER_JOURNAL_TRUNCATED"):
             verify_journal(self.journal, KEY)
+
+
+    def _stage2_cli(self, *, last_mac, disclosure):
+        import test_stage2_reconcile as stage
+        incumbent_file = self.root / "recorder" / "incumbent.json"
+        decisions_file = self.root / "recorder" / "decisions.json"
+        disclosure_file = self.root / "recorder" / "disclosure.json"
+        incumbent_file.write_text(json.dumps(stage.INCUMBENT))
+        decisions_file.write_text(json.dumps(stage.DECISIONS))
+        disclosure_file.write_text(json.dumps(disclosure))
+        report = self.root / "recorder" / "stage2.json"
+        env = {**os.environ, "BUDDY_RECORDER_KEY_HEX": KEY.hex()}
+        result = subprocess.run([
+            sys.executable, str(Path(__file__).with_name("stage2_reconcile.py")),
+            "--snapshot", str(self.snapshot), "--receipt", str(self.receipt),
+            "--gate", str(self.gate), "--repo", str(self.repo), "--head", self.start,
+            "--incumbent-plan", str(incumbent_file), "--decisions", str(decisions_file),
+            "--report", str(report), "--custody-journal", str(self.journal),
+            "--disclosure", str(disclosure_file), "--external-anchor", last_mac,
+        ], env=env, capture_output=True, text=True)
+        return result, report
+
+    def test_stage2_cli_blocks_before_recorder_disclosure(self):
+        import test_stage2_reconcile as stage
+        sealed = self._seal()
+        data = {**self.disclosure, "incumbent_plan_digest": digest(stage.INCUMBENT)}
+        response, report = self._stage2_cli(last_mac=sealed["mac"], disclosure=data)
+        self.assertEqual(2, response.returncode)
+        self.assertIn("RECORDER_DISCLOSURE_NOT_OPEN", response.stderr)
+        self.assertFalse(report.exists())
+
+    def test_stage2_cli_requires_keyed_attested_order_and_matching_head(self):
+        import test_stage2_reconcile as stage
+        sealed = self._seal()
+        data = {**self.disclosure, "incumbent_plan_digest": digest(stage.INCUMBENT)}
+        opened = append(self.journal, KEY, "STAGE2_DISCLOSED", self.snapshot,
+                        receipt=self.receipt, gate=self.gate, disclosure=data,
+                        expected_last_mac=sealed["mac"])
+        bad, report = self._stage2_cli(last_mac="0"*64, disclosure=data)
+        self.assertEqual(2, bad.returncode)
+        self.assertIn("EXTERNAL_ANCHOR_MISMATCH", bad.stderr)
+        self.assertFalse(report.exists())
+        accepted, report = self._stage2_cli(last_mac=opened["mac"], disclosure=data)
+        self.assertEqual(0, accepted.returncode, accepted.stderr)
+        result = json.loads(report.read_text())
+        self.assertEqual("LOCAL_RECORDER_EVENT_CHAIN_VERIFIED", result["custody_observation"]["state"])
+        self.assertEqual("NOT_GRANTED", result["execution_authority"])
+        self.assertEqual("NOT_AUTHENTICATED_BY_THIS_CLIENT",
+                         result["custody_observation"]["temporal_independence"])
 
 
 if __name__ == "__main__":
