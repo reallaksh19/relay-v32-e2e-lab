@@ -1,0 +1,15 @@
+{
+  "run_id": "SYNTHETIC-BUDDY-R01-70",
+  "responsibility": "reallaksh19/relay-v32-e2e-lab#4",
+  "candidate_sha": "d592dc8b70b934f5b9282d3161094a5e60478837",
+  "source_kind": "AGENT_SELF_ESTIMATE",
+  "used_context_tokens": null,
+  "usable_context_tokens": null,
+  "episode_consumed_percent": 70,
+  "next_unit_demand_tokens": null,
+  "safety_reserve_tokens": null,
+  "cognitive_warning": "NONE",
+  "interruption_risk": "NONE",
+  "agent_requests_runner": false,
+  "confidence": "LOW"
+}
