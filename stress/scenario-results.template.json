@@ -1,0 +1,201 @@
+{
+  "schema": "v32-lab-live-observations-v1",
+  "source": "UNEXECUTED_TEMPLATE_DO_NOT_EDIT_TO_FABRICATE_RESULTS",
+  "scenarios": [
+    {
+      "id": "S01",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "correct CLI result and independently verified PR and CI",
+      "observed": null
+    },
+    {
+      "id": "S02",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "facts rejected without changing canonical P/E/D",
+      "observed": null
+    },
+    {
+      "id": "S03",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "P may advance, E remains zero and evidence gap is visible",
+      "observed": null
+    },
+    {
+      "id": "S04",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "prior E becomes stale, P preserved until re-evidence",
+      "observed": null
+    },
+    {
+      "id": "S05",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "rejected facts, no trusted P/E change",
+      "observed": null
+    },
+    {
+      "id": "S06",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "drift detected and reconciled by authorized writer",
+      "observed": null
+    },
+    {
+      "id": "S07",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "claim-first decompose-check blocks release",
+      "observed": null
+    },
+    {
+      "id": "S08",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "release/currentness boundary requires authorized replan; no hidden denominator rewrite",
+      "observed": null
+    },
+    {
+      "id": "S09",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "actual provider readback conflict is detected and convergence is independently verified",
+      "observed": null
+    },
+    {
+      "id": "S10",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "no false currentness or successful write",
+      "observed": null
+    },
+    {
+      "id": "S11",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "B selects correct responsibility from repository only",
+      "observed": null
+    },
+    {
+      "id": "S12",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "native cold verifier fails closed with named mismatch",
+      "observed": null
+    },
+    {
+      "id": "S13",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "no EXTERNAL_AUTHENTICITY claim without independently retained anchor",
+      "observed": null
+    },
+    {
+      "id": "S14",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "preserve original and accepted PLAN_UPDATE, refuse invented Owner basis",
+      "observed": null
+    },
+    {
+      "id": "S15",
+      "status": "NOT_EXECUTED",
+      "source_sha": null,
+      "run_refs": [],
+      "executor_login": null,
+      "independent_reviewer": {
+        "login": null,
+        "comment_url": null
+      },
+      "expected": "no spurious writer action; byte-stable recomputation",
+      "observed": null
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "status": "STARTER_READY_NO_REMOTE_LAB_YET",
+  "repository": "reallaksh19/relay-v32-e2e-lab",
+  "repository_created": false,
+  "common_protocol": "V3.2",
+  "common_engine_commit": "13989969f6b7e432c4f7c1ddfe975449dba53593",
+  "local_seed_unit_tests": {"cases": 14, "passed": 14, "failed": 0},
+  "functional_acceptance_precommitted_RED": {"cases": 9, "passed": 0, "failed": 9, "errors": 7, "assertion_failures": 2},
+  "proposal_v2_actual_native_gate": "NOT_EXECUTED_REQUIRES_COMMON_PRIVATE_CHECKOUT_AND_REAL_PARENT_ISSUE",
+  "github_lab_issues_prs_actions": "NOT_CREATED",
+  "source_bound_c6_cold_test": "NOT_EXECUTED",
+  "e2e_live_scenarios": {"total": 15, "executed": 0, "qualified": 0},
+  "automated_scoreboard_writer": "OFF",
+  "overall_qualification": "NOT_QUALIFIED",
+  "note": "Only local starter tests have run. RED acceptance is intentional, not production regression success."
+}

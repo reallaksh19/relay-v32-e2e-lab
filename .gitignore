@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.lab-bootstrap-state.json
+.venv/
+evidence/offline-harness-result.json

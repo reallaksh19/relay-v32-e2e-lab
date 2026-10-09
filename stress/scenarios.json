@@ -1,0 +1,22 @@
+{
+  "schema":"v32-lab-stress-matrix-v1",
+  "status":"UNEXECUTED_LIVE_GITHUB_SCENARIOS",
+  "scenarios":[
+    {"id":"S01","phase":"code","inject":"valid complete CSV journey","expect":"correct CLI result and independently verified PR and CI","authority":"functional"},
+    {"id":"S02","phase":"DELP","inject":"agent includes progress/title fields in CHECKPOINT_FACTS","expect":"facts rejected without changing canonical P/E/D","authority":"schema"},
+    {"id":"S03","phase":"DELP","inject":"COMPLETE without evidence_refs","expect":"P may advance, E remains zero and evidence gap is visible","authority":"projection"},
+    {"id":"S04","phase":"DELP","inject":"push a new PR HEAD after qualification","expect":"prior E becomes stale, P preserved until re-evidence","authority":"provider"},
+    {"id":"S05","phase":"DELP","inject":"comment from non-author/untrusted identity","expect":"rejected facts, no trusted P/E change","authority":"provider"},
+    {"id":"S06","phase":"title","inject":"human alters generated issue prefix","expect":"drift detected and reconciled by authorized writer","authority":"publisher"},
+    {"id":"S07","phase":"decompose","inject":"remove parent CL-DIFF ownership","expect":"claim-first decompose-check blocks release","authority":"graph"},
+    {"id":"S08","phase":"graph","inject":"change claim weight without PLAN_UPDATE","expect":"release/currentness boundary requires authorized replan; no hidden denominator rewrite","authority":"owner"},
+    {"id":"S09","phase":"publisher","inject":"two simultaneous writer jobs","expect":"actual provider readback conflict is detected and convergence is independently verified","authority":"concurrency"},
+    {"id":"S10","phase":"provider","inject":"rate-limit or fail source API during sync","expect":"no false currentness or successful write","authority":"failure"},
+    {"id":"S11","phase":"handover","inject":"terminate Agent A and start independent Agent B","expect":"B selects correct responsibility from repository only","authority":"custody"},
+    {"id":"S12","phase":"C6","inject":"alter frozen context/event/challenge independently","expect":"native cold verifier fails closed with named mismatch","authority":"custody"},
+    {"id":"S13","phase":"C6","inject":"replace both offline files, recompute internal hashes","expect":"no EXTERNAL_AUTHENTICITY claim without independently retained anchor","authority":"custody"},
+    {"id":"S14","phase":"intent","inject":"Owner changes requirement after initial graph release","expect":"preserve original and accepted PLAN_UPDATE, refuse invented Owner basis","authority":"owner"},
+    {"id":"S15","phase":"replay","inject":"run same projection twice with unchanged provider source","expect":"no spurious writer action; byte-stable recomputation","authority":"determinism"}
+  ],
+  "pass_rule":"All live scenarios must have independently captured exact-HEAD expected/observed evidence. An unexecuted or critical failed scenario prohibits overall E2E PASS."
+}

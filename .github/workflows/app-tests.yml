@@ -1,0 +1,26 @@
+name: CSV auditor staged acceptance (RED until implemented)
+on:
+  push:
+    branches: [main, 'lab/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  seed-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Source and bootstrap integrity
+        run: python -m unittest discover -s tests -v
+  responsibility-acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Run current responsibility plus predecessors
+        env:
+          TEST_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: python scripts/acceptance_stage.py --branch "$TEST_BRANCH"

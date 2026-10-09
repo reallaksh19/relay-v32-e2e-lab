@@ -1,0 +1,8 @@
+{
+  "repository":"reallaksh19/Common",
+  "commit_sha":"13989969f6b7e432c4f7c1ddfe975449dba53593",
+  "protocol_path":"skills/engineering-pr-delivery-v3.2",
+  "engine_path":"skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py",
+  "pin_type":"IMMUTABLE_COMMIT_NO_MOVING_MAIN",
+  "note":"Common state inspected on 2026-10-09. V3.2 still candidate. WP1 PR #874 is a separate unmerged proposal and is NOT included in this pin."
+}

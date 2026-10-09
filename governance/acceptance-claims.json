@@ -1,0 +1,9 @@
+{
+  "schema": "lab-acceptance-claims-v1",
+  "authority": "SYNTHETIC_LAB_PROPOSAL_NOT_OWNER_PRODUCT_VERBATIM",
+  "claims": [
+    {"id": "CL-INPUT", "kind": "SEMANTIC", "claim": "Every input CSV has nonempty unique IDs; invalid, absent or duplicate IDs fail closed", "owner": "R01"},
+    {"id": "CL-DIFF", "kind": "SEMANTIC", "claim": "Added, removed and changed records are computed from exact key identity, independently of CSV row order", "owner": "R02"},
+    {"id": "CL-CLI", "kind": "SEMANTIC", "claim": "CLI emits stable JSON with correct exit statuses and no success payload on malformed input", "owner": "R03"}
+  ]
+}
