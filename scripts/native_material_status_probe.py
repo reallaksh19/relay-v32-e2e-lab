@@ -126,6 +126,5 @@ def main() -> int:
     print("READ_ONLY_NATIVE_DELP_OBSERVED; "+str(report["title_drift_count"])+" DRIFTED TITLES; NO FACTS CREATED")
     return 0
 
-
 if __name__ == "__main__":
     raise SystemExit(main())
