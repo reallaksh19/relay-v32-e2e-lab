@@ -1,64 +1,85 @@
-# Engineering Relay V3.2 — Buddy Runner Stage 1 experiment
+# Engineering Relay V3.2 — Buddy Runner blind Stage 1 (experimental)
 
-**Status:** experimental, source-isolated construction only. Not production.
-Tracking: Common issue #879; existing lab responsibility #4.
+**Status:** isolated research/code experiment, not a production V3.2 feature.
+Governing qualification: Common #879; existing lab R01 responsibility: lab #4.
+The lab synthetic CSV programme does not become a new Owner requirement.
 
-## Scope: BR-00–BR-03 first slice
+## Two event architecture
 
-1. Actual Agent 1 START must bind a clean checkout to an exact SHA. The recorder
-   calls capture-start at that moment; a retrospectively selected commit is not
-   observed START evidence.
-2. A versioned Stage 1 source allowlist exposes only four original R01 files,
-   reading from the PINNED Git object (not the later incumbent working tree).
-   Current PR stats, incumbent HOW and incumbent final plan are excluded.
-3. Stage 1 WHAT/WHY packet is exact-key filtered. Its free text still requires
-   independent contamination review.
-4. Runner plan is sealed with an exclusive recorder write, binding original
-   manifest digest and independent plan digest. Any Stage 2 must verify first.
+**Event 0 — observed Agent 1 START:** a trusted harness records actual clean
+HEAD (not a retrospectively chosen commit) and copies a release-specific
+allowlist of four files *from that commit's Git tree*. At START only the
+original parent/claim WHAT/WHY is known and supplied as initial-packet.
 
-## Instructions
+**Event 1 — TIME_FOR_RUNNER at approximately 70% useful life:** Agent 1
+publishes WHAT/WHY of what it addressed, pending problems, known issues and
+parked decisions. The harness adds those words to the earlier source-only
+snapshot WITHOUT re-reading the current repository. Both initial and late
+packets must pass exact-key validation.
 
-Capture from the original clean Agent 1 start checkout:
+**Event 2 — Runner plan seal:** a read-only isolated Runner derives its own
+plan from the start tree and the permitted Stage 1 facts. Trusted recorder
+seals plan/activation/start-manifest identities before Stage 2 disclosure.
 
-    python experiments/buddy_runner_v1/runner_stage1.py capture-start \
-      --repo . --snapshot /isolated/buddy-run-001 --run buddy-run-001 \
-      --start-sha ACTUAL_40_HEX_START_SHA --packet /recorder/what-why.json
+**Stage 2 and promotion:** NOT IMPLEMENTED in this slice.
 
-The WHAT/WHY packet has precisely five arrays: what, why, pending, known_issues,
-parked. The plan has five nonempty arrays: understanding, approach,
-rejected_alternatives, assumptions, questions; and one next_action string.
+## CLI (run from original clean START checkout with a trusted recorder)
 
-Seal with recorder custody BEFORE disclosing any newer information:
+    python experiments/buddy_runner_v1/runner_protocol.py start \
+      --repo . --snapshot /isolated/run-001 --run run-001 \
+      --start-sha ACTUAL_START_SHA --initial-packet /recorder/original-what-why.json
 
-    python experiments/buddy_runner_v1/runner_stage1.py seal \
-      --snapshot /isolated/buddy-run-001 \
-      --receipt /recorder-only/buddy-run-001.receipt.json \
-      --plan /recorder-only/runner-plan.json
+After Agent 1 continues coding and signals TIME_FOR_RUNNER:
 
-Verify:
+    python experiments/buddy_runner_v1/runner_protocol.py activate \
+      --snapshot /isolated/run-001 --packet /recorder/late-what-why.json
 
-    python experiments/buddy_runner_v1/runner_stage1.py verify \
-      --snapshot /isolated/buddy-run-001 \
-      --receipt /recorder-only/buddy-run-001.receipt.json
+Once Runner authors its INDEPENDENT plan, recorder-owned sealing:
 
-Test:
+    python experiments/buddy_runner_v1/runner_protocol.py seal \
+      --snapshot /isolated/run-001 \
+      --receipt /recorder-only/run-001.plan.json \
+      --gate /recorder-only/run-001.gate.json \
+      --plan /recorder-only/runner-own-plan.json
+
+Verify before Stage 2 reveal:
+
+    python experiments/buddy_runner_v1/runner_protocol.py verify-gate \
+      --snapshot /isolated/run-001 \
+      --receipt /recorder-only/run-001.plan.json \
+      --gate /recorder-only/run-001.gate.json
+
+The underlying runner_stage1.py helpers are intentionally lower-level
+building blocks. A valid two-event experimental workflow MUST use the
+runner_protocol.py activation and bound gate, not a bare plan receipt.
 
     python -m unittest discover -s experiments/buddy_runner_v1 -p 'test_*.py' -v
 
-## Important limitations / remaining work
+## Boundaries and unproven requirements
 
-This is NOT a cryptographic temporal seal or actual runtime sandbox. A hostile
-actor with recorder-write access can change both a receipt and its digest.
-The final recorder needs independent immutable storage and a disclosure event.
-The Buddy runtime must be isolated from all GitHub access, network, credentials,
-live repo, current issue comments, and post-cutoff context by the host, not merely
-by prompt. Script cannot revoke tools exposed by another agent runtime.
+No current source, PR statistics, Agent 1 HOW, final plan, current CI or future
+issue comments are included in the Stage 1 snapshot. The snapshot directory
+must be provided to Runner INSTEAD of a live Git checkout. The host must deny
+Runner network, GitHub connectors, credentials and chat with future details:
+these Python helpers do not revoke external privileges.
 
-Pending: TIME_FOR_RUNNER advisory in ordinary TASK_EVIDENCE; observed remaining
-working-runway estimate; source-authenticated original Owner/issue snapshots;
-trusted recorder custody; Stage 2 source and final-plan reconciliation; single
-writer promotion; real Agent 1/Runner interruption test; comparative cost trials.
+The late WHAT/WHY packet's free text can still leak HOW if maliciously authored;
+syntactic field validation cannot prove no semantic hints. Independently screen
+such packets before a blinded trial.
 
-Tests use generated temporary Git repositories. They do NOT prove real agent
-takeover, whole V3.2 lifecycle, genuine 70% health measurement, or C6 production
-readiness. No Common frozen files or current R01 product were modified.
+Filesystem exclusive-create and SHA256 detect accidental/simple post-seal edits,
+NOT coordinated tampering, authenticated Owner origin or chronological fact.
+Trusted immutable recorder storage, temporal order attestation and source
+provenance remain to be built. Its contents must not be writable by either
+coding agent.
+
+Pending: Agent Health working-runway calibration; event-gated TIME_FOR_RUNNER
+advisory in existing TASK_EVIDENCE without DELP score changes; source-pinned
+Owner/issue snapshot and cutoff guard; real Runner execution; independent
+Stage 2 plan reconciliation; single-writer fenced promotion; 50/70/85% trial,
+clean no-injury control and independent measured recovery economics.
+
+No Common frozen V3.2 source, native owner contract or existing R01 product
+file changed. These unit tests use temporary Git repositories, and a passing
+CI run would only qualify these helper functions, not the complete V3.2
+end-to-end lifecycle or a real interrupted-agent takeover.
