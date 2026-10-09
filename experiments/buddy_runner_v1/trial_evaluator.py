@@ -157,3 +157,30 @@ def evaluate(value):
         "input_digest": "sha256:"+hashlib.sha256(
             json.dumps(value, sort_keys=True, separators=(",",":")).encode()).hexdigest(),
     }
+
+
+
+def main():
+    import argparse
+    from pathlib import Path
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    opts = parser.parse_args()
+    try:
+        record = strict_loads(Path(opts.input).read_text(encoding="utf-8"))
+        report = evaluate(record)
+        outfile = Path(opts.output)
+        # No silently replacing a previously recorded outcome.
+        with outfile.open("x", encoding="utf-8") as stream:
+            json.dump(report, stream, indent=2, sort_keys=True)
+            stream.write("\n")
+        print(json.dumps({"case_id": report["case_id"],
+                          "qualification": report["qualification"],
+                          "production_write_authority": report["production_write_authority"]}))
+    except (TrialError, OSError, ValueError, TypeError) as exc:
+        parser.exit(2, "TRIAL_EVALUATION_FAIL_CLOSED: " + str(exc) + "\n")
+
+
+if __name__ == "__main__":
+    main()
