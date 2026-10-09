@@ -4,6 +4,34 @@
 Governing qualification: Common #879; existing lab R01 responsibility: lab #4.
 The lab synthetic CSV programme does not become a new Owner requirement.
 
+## Prompt-first operating entrypoint — “Prepare for runner” (Markdown-only proposal)
+
+The reusable instructions are in [prompt_first/PREPARE_FOR_RUNNER_ENTRYPOINT.md](prompt_first/PREPARE_FOR_RUNNER_ENTRYPOINT.md),
+[Stage 1](prompt_first/STAGE1_THINKING_TEMPLATE.md),
+[Stage 2](prompt_first/STAGE2_RECONCILIATION_TEMPLATE.md), and
+[operator examples](prompt_first/OPERATOR_GUIDE_EXAMPLES.md).
+
+The Owner may say **“Prepare for runner”** to an *active* Agent A.
+Under the prompt-first contract that means: assess actually available
+episode/context-life evidence; begin the sanitized original-source and
+WHAT/WHY intake immediately; and continue the authorized engineering
+task. At each ordinary TASK_EVIDENCE checkpoint, Agent A should
+proactively suggest **“Time for Runner”** near approximately 70% of
+**estimated agent life consumed** (60% prepare; 85% urgent), or earlier
+for credible reliability/next-unit runway warnings. Provider-reported
+tokens, calibrated episode estimates, self-estimates and UNKNOWN are
+distinct; never invent token readings or substitute task P/E/D or
+seven-component delivery health for context-life consumption.
+
+No Markdown prompt automatically reads hidden model context-window
+telemetry, triggers in the background, creates a new AI Runner session
+or enforces tool access. The live agent/operator must actually load the
+entrypoint and separately enforce a fresh Stage 1 restricted context.
+The legacy BR-05 Python advisory remains an *optional historical
+experiment*; the prompt-first revamp does not change or require it.
+A suggestion is not observed Stage 1 execution, a sealed plan,
+Stage 2 disclosure or a transfer of exclusive source-write authority.
+
 ## Two event architecture
 
 **Event 0 — observed Agent 1 START:** a trusted harness records actual clean
