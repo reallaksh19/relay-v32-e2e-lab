@@ -1,0 +1,99 @@
+name: V3.2 lab GET-only material and evidence admission preflight
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'governance/released-graph.json'
+      - 'src/csv_auditor/**'
+      - 'scripts/material_evidence_gate.py'
+      - 'scripts/capture_material_provider.py'
+      - '.github/workflows/v32-material-evidence-readonly.yml'
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  pull-requests: read
+jobs:
+  material-readonly-preflight:
+    if: ${{ github.repository == 'reallaksh19/relay-v32-e2e-lab' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout trusted exact default-branch source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Reject source movement since event admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          echo "Lab source frozen for this observation: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Execute all material admission negative controls
+        run: python -m unittest discover -s tests -p 'test_*material*gate*.py' -v
+      - name: Execute bounded GitHub observer negative controls
+        run: python -m unittest discover -s tests -p 'test_capture_material_provider.py' -v
+      - name: Capture actual PR and Actions provider state (GET only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/capture_material_provider.py \
+            --graph governance/released-graph.json \
+            --output "$RUNNER_TEMP/material-provider-snapshot.json"
+      - name: Apply source-bound read-only admission preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/material_evidence_gate.py \
+            --graph governance/released-graph.json \
+            --provider-snapshot "$RUNNER_TEMP/material-provider-snapshot.json" \
+            --output "$RUNNER_TEMP/material-evidence-preflight.json"
+          python - "$RUNNER_TEMP/material-evidence-preflight.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding="utf-8"))
+          assert r["overall"]=="NOT_QUALIFIED_FOR_FACTS_ADMISSION",r
+          assert not r["wrote_github"]
+          assert all(not leaf["facts_admitted"] and leaf["progress_credit"]=="NONE" for leaf in r["leaves"])
+          print("READ_ONLY_MATERIAL_OBSERVATION; ZERO CHECKPOINT_FACTS; NO PROGRESS_CREDIT")
+          PY
+      - name: Checkout exact private Common V3.2 source
+        uses: actions/checkout@v4
+        with:
+          repository: reallaksh19/Common
+          ref: 13989969f6b7e432c4f7c1ddfe975449dba53593
+          token: ${{ secrets.COMMON_READ_TOKEN }}
+          path: .protocol/common
+          persist-credentials: false
+      - name: Run native source-locked V3.2 graph and GET-only projection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .protocol/common rev-parse HEAD)" = '13989969f6b7e432c4f7c1ddfe975449dba53593'
+          python -m pip install --disable-pip-version-check PyYAML
+          python scripts/check_graph.py \
+            --engine .protocol/common/skills/engineering-pr-delivery-v3.2/scripts/delp_projection_v32.py \
+            --live-readonly
+          echo 'Read-only audit: not evidence admission, Owner approval, PR-view writer or C6 acceptance.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive exact-source material snapshot and preflight report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v32-material-preflight-${{ github.sha }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            ${{ runner.temp }}/material-provider-snapshot.json
+            ${{ runner.temp }}/material-evidence-preflight.json
+      - name: Explicit qualification boundary
+        if: always()
+        run: |
+          echo 'This workflow is GET-ONLY. Even GREEN means observation/contract ran, not accepted CHECKPOINT_FACTS.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No source/Owner custody, 9 app cases, PR writer, issue P/E/D or cold C6 success inferred.' >> "$GITHUB_STEP_SUMMARY"
