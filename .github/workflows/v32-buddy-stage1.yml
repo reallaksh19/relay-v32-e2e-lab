@@ -19,4 +19,14 @@ jobs:
       - name: Stage1 source-isolation and sealing adversarial tests
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python -m unittest discover -s experiments/buddy_runner_v1 -p "test_*.py" -v
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s experiments/buddy_runner_v1 -p "test_*.py" -v 2>&1 | tee buddy-stage1-test.log
+      - name: Preserve actual test output, including RED
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buddy-stage1-test-log
+          path: buddy-stage1-test.log
+          if-no-files-found: warn
