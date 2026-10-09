@@ -1,14 +1,19 @@
 """BR-06 ordered recorder tests: replay, forged, rollback, cross-run controls."""
 from __future__ import annotations
 import json
+import base64
+import hashlib
 import os
 import subprocess
 import sys
 from pathlib import Path
 import unittest
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
 import test_runner_stage1 as seed
-from runner_stage1 import Stage1Error, capture_start, digest
+from runner_stage1 import Stage1Error, capture_start, digest, canonical
 from runner_protocol import activate, seal_activated_plan
 from runner_readiness import assess, render_task_evidence
 from recorder_custody import append, verify_events, verify_journal, validate_disclosure
@@ -171,6 +176,24 @@ class CustodyTests(unittest.TestCase):
         decisions_file.write_text(json.dumps(stage.DECISIONS))
         disclosure_file.write_text(json.dumps(disclosure))
         report = self.root / "recorder" / "stage2.json"
+        # Synthetic test-only signing key; NOT a real independent witness.
+        private = Ed25519PrivateKey.generate()
+        pub = private.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+        keyfile = self.root / "recorder" / "witness.pub"
+        keyfile.write_bytes(pub)
+        fingerprint = "sha256:" + hashlib.sha256(pub).hexdigest()
+        rows = [json.loads(line) for line in self.journal.read_text().splitlines()]
+        body = {"schema": "v32-buddy-external-witness-v1",
+                "witness_id": "synthetic-test-witness", "run_id": "RUN-1",
+                "event": "PLAN_SEALED", "sealed_event_mac": rows[2]["mac"],
+                "manifest_digest": digest(json.loads((self.snapshot / "manifest.json").read_text())),
+                "plan_receipt_digest": digest(json.loads(self.receipt.read_text())),
+                "gate_digest": digest(json.loads(self.gate.read_text())),
+                "witness_event_id": "TEST-ONLY-001",
+                "attested_at_utc": "2026-10-09T12:50:00Z"}
+        witness_file = self.root / "recorder" / "witness.json"
+        witness_file.write_bytes(canonical({**body, "signature_b64":
+            base64.b64encode(private.sign(canonical(body))).decode()}))
         env = {**os.environ, "BUDDY_RECORDER_KEY_HEX": KEY.hex()}
         result = subprocess.run([
             sys.executable, str(Path(__file__).with_name("stage2_reconcile.py")),
@@ -179,6 +202,10 @@ class CustodyTests(unittest.TestCase):
             "--incumbent-plan", str(incumbent_file), "--decisions", str(decisions_file),
             "--report", str(report), "--custody-journal", str(self.journal),
             "--disclosure", str(disclosure_file), "--external-anchor", last_mac,
+            "--witness-receipt", str(witness_file),
+            "--witness-public-key", str(keyfile),
+            "--witness-key-fingerprint", fingerprint,
+            "--witness-id", "synthetic-test-witness",
         ], env=env, capture_output=True, text=True)
         return result, report
 
