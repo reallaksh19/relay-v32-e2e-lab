@@ -56,6 +56,7 @@ def _read(f):
         except (ValueError, UnicodeDecodeError) as exc:
             raise Stage1Error("RECORDER_JOURNAL_INVALID_JSON") from exc
         _require(isinstance(obj, dict), "RECORDER_JOURNAL_ROW_INVALID")
+        _require(line == canonical(obj), "RECORDER_NONCANONICAL_LINE")
         result.append(obj)
     _require(len(result) <= 4, "RECORDER_EXCESS_EVENT_COUNT")
     return result
