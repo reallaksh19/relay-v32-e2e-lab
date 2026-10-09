@@ -1,0 +1,22 @@
+name: V3.2 Buddy Stage1 experimental contract
+on:
+  pull_request:
+    paths:
+      - "experiments/buddy_runner_v1/**"
+      - ".github/workflows/v32-buddy-stage1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage1-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stage1 source-isolation and sealing adversarial tests
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m unittest discover -s experiments/buddy_runner_v1 -p "test_*.py" -v
